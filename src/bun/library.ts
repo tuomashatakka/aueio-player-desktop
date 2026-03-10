@@ -1,6 +1,7 @@
 import { readdir, stat } from "fs/promises";
-import { join, extname, basename } from "path";
+import { join, extname, basename, dirname } from "path";
 import type { Track } from "./rpc";
+import type { TagsStore } from "./tags";
 
 const AUDIO_EXTENSIONS = new Set([
   ".mp3",
@@ -26,6 +27,25 @@ const generateCoverColor = (title: string): string => {
   return `hsl(${hue}, 60%, 40%)`;
 };
 
+// Try to extract year from common filename patterns:
+// "2023 - Title", "Title (2023)", "Title [2023]", "2023_Title"
+const extractYear = (noExt: string): number | undefined => {
+  const m =
+    noExt.match(/\b(19\d{2}|20\d{2})\b/) ??
+    noExt.match(/[\[(](19\d{2}|20\d{2})[\])]/);
+  if (!m) return undefined;
+  const y = parseInt(m[1] ?? m[0], 10);
+  return Number.isNaN(y) ? undefined : y;
+};
+
+// Extract track number from leading digits: "01 Title", "12. Title", "03 - Title"
+const extractTrackNumber = (noExt: string): number | undefined => {
+  const m = noExt.match(/^(\d{1,3})[.\s-]/);
+  if (!m) return undefined;
+  const n = parseInt(m[1] ?? '', 10);
+  return Number.isNaN(n) ? undefined : n;
+};
+
 const parseBasicMeta = (
   filePath: string,
   size: number
@@ -33,10 +53,11 @@ const parseBasicMeta = (
   const filename = basename(filePath);
   const noExt = basename(filePath, extname(filePath));
 
-  // Try to parse "Artist - Title" pattern
+  // Try "Artist - Title" pattern
   const dashIdx = noExt.indexOf(" - ");
   let artist = "Unknown Artist";
   let title = noExt;
+  let trackNumber: number | undefined;
 
   if (dashIdx > 0) {
     artist = noExt.slice(0, dashIdx).trim();
@@ -44,19 +65,34 @@ const parseBasicMeta = (
   }
 
   // Strip leading track numbers like "01 ", "01. "
-  title = title.replace(/^\d+\.?\s+/, "");
+  const stripped = title.replace(/^\d+\.?\s+/, "");
+  if (stripped !== title) {
+    trackNumber = extractTrackNumber(title);
+    title = stripped;
+  } else {
+    trackNumber = extractTrackNumber(title);
+  }
+
+  // Use parent directory name as album hint
+  const parentDir = basename(dirname(filePath));
+  const album = parentDir !== "." && parentDir !== "/" ? parentDir : "Unknown Album";
 
   return {
     title,
     artist,
-    album: "Unknown Album",
+    album,
     duration: 0,
     size,
     coverColor: generateCoverColor(filename),
+    year: extractYear(noExt),
+    trackNumber,
   };
 };
 
-export const scanLibrary = async (folders: string[]): Promise<Track[]> => {
+export const scanLibrary = async (
+  folders: string[],
+  tagOverrides: TagsStore = {}
+): Promise<Track[]> => {
   const tracks: Track[] = [];
   const seen = new Set<string>();
 
@@ -77,7 +113,8 @@ export const scanLibrary = async (folders: string[]): Promise<Track[]> => {
             try {
               const stats = await stat(fullPath);
               const meta = parseBasicMeta(fullPath, stats.size);
-              tracks.push({ id: fullPath, path: fullPath, ...meta });
+              const overrides = tagOverrides[fullPath] ?? {};
+              tracks.push({ id: fullPath, path: fullPath, ...meta, ...overrides });
             } catch {
               // skip unreadable files
             }
