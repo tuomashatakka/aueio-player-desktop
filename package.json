@@ -1,0 +1,17 @@
+{
+  "name": "aueio-player-desktop",
+  "version": "0.1.0",
+  "description": "A beautiful, minimal cross-platform audio player",
+  "scripts": {
+    "dev": "electrobun dev --watch",
+    "build": "electrobun build",
+    "test": "npx playwright test"
+  },
+  "dependencies": {
+    "electrobun": "^1.15.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@playwright/test": "^1.40.0"
+  }
+}
