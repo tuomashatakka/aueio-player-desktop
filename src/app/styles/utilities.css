@@ -1,0 +1,37 @@
+/**
+ * Utilities — audioblocks-design-system
+ */
+
+@layer utilities {
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+
+  [data-stack] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    &[data-stack="sm"] { gap: var(--sp-2); }
+    &[data-stack="lg"] { gap: var(--sp-6); }
+  }
+
+  [data-cluster] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3);
+    align-items: center;
+  }
+
+  [data-truncate] {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [hidden], [data-hidden] {
+    display: none !important;
+  }
+}

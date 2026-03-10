@@ -1,0 +1,140 @@
+/**
+ * Base Element Styles — audioblocks-design-system
+ */
+
+@layer base {
+
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    font-family: var(--font);
+    font-size: var(--text-base);
+    color: var(--text);
+    background: var(--bg);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-tight);
+    color: var(--text);
+    margin-bottom: var(--sp-3);
+
+    &:last-child { margin-bottom: 0; }
+  }
+
+  h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); letter-spacing: -0.02em; }
+  h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
+  h3 { font-size: var(--text-xl); }
+  h4 { font-size: var(--text-lg); }
+  h5, h6 { font-size: var(--text-base); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+
+  p {
+    color: var(--text-dim);
+    margin-bottom: var(--sp-3);
+    &:last-child { margin-bottom: 0; }
+  }
+
+  small { font-size: var(--text-sm); color: var(--text-muted); }
+  strong, b { font-weight: var(--font-semibold); color: var(--text); }
+
+  a {
+    color: var(--accent-alt);
+    transition: color var(--duration-fast) var(--ease);
+    &:hover { color: var(--accent-alt-hover); }
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: var(--touch-target);
+    padding: var(--sp-2) var(--sp-4);
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    color: var(--text);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition:
+      background var(--duration-fast) var(--ease),
+      border-color var(--duration-fast) var(--ease),
+      transform var(--duration-fast) var(--ease);
+
+    &:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--border-hover); }
+    &:active:not(:disabled) { transform: scale(0.98); }
+
+    &[data-variant="primary"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      &:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+    }
+
+    &[data-variant="ghost"] {
+      background: transparent;
+      border-color: transparent;
+      &:hover:not(:disabled) { background: var(--bg-input); }
+    }
+
+    &[data-size="sm"] { min-height: 32px; padding: var(--sp-1) var(--sp-3); font-size: var(--text-sm); }
+    &[data-size="lg"] { min-height: 52px; padding: var(--sp-3) var(--sp-6); font-size: var(--text-lg); }
+
+    &[data-icon] { width: var(--touch-target); padding: 0; }
+    &[data-icon][data-size="sm"] { width: 32px; min-height: 32px; }
+    &[data-icon][data-size="lg"] { width: 52px; min-height: 52px; }
+  }
+
+  input,
+  textarea,
+  select {
+    width: 100%;
+    min-height: var(--touch-target);
+    padding: var(--sp-2) var(--sp-3);
+    font-size: var(--text-base);
+    color: var(--text);
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition:
+      border-color var(--duration-fast) var(--ease),
+      box-shadow var(--duration-fast) var(--ease);
+
+    &::placeholder { color: var(--text-muted); }
+    &:hover:not(:disabled):not(:focus) { border-color: var(--border-hover); }
+    &:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px var(--accent-muted);
+    }
+  }
+
+  input[type="range"] {
+    height: 20px;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+
+    &::-webkit-slider-track { height: 4px; background: var(--bg-input); border-radius: 2px; }
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px; margin-top: -6px;
+      background: var(--accent); border: none; border-radius: var(--radius-full);
+      transition: transform var(--duration-fast) var(--ease);
+    }
+    &::-webkit-slider-thumb:hover { transform: scale(1.15); }
+    &:focus { box-shadow: none; }
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--bg-input);
+    border-radius: var(--radius);
+    &:hover { background: var(--bg-hover); }
+  }
+
+  ::selection { background: var(--accent-muted); color: var(--text); }
+}

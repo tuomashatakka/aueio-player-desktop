@@ -1,0 +1,40 @@
+/**
+ * State Styles — audioblocks-design-system
+ */
+
+@layer states {
+
+  [data-state="success"], [data-variant="success"] { --_state-color: var(--success); --_state-bg: var(--success-muted); }
+  [data-state="warning"], [data-variant="warning"] { --_state-color: var(--warning); --_state-bg: var(--warning-muted); }
+  [data-state="error"], [data-state="danger"], [data-variant="danger"], [data-error], [aria-invalid="true"] { --_state-color: var(--danger); --_state-bg: var(--danger-muted); }
+  [data-state="info"], [data-variant="info"] { --_state-color: var(--info); --_state-bg: var(--info-muted); }
+
+  [data-loading] {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.7;
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0; margin: auto;
+      width: 16px; height: 16px;
+      border: 2px solid transparent;
+      border-top-color: currentColor;
+      border-radius: var(--radius-full);
+      animation: spin 0.6s linear infinite;
+    }
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  :disabled, [disabled], [aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  [data-active], [aria-selected="true"], [aria-pressed="true"] {
+    --_state-color: var(--accent);
+    --_state-bg: var(--accent-muted);
+  }
+}
