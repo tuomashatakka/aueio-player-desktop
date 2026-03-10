@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -30,29 +30,47 @@
         <span id="track-count"></span>
       </div>
 
-      <!-- Loading overlay -->
-      <div id="loading-overlay">
-        <div class="spinner" aria-hidden="true"></div>
-        <span>Scanning library…</span>
-      </div>
+      <!-- Body: tree panel + table -->
+      <div id="library-body">
 
-      <!-- Empty state -->
-      <div id="library-empty" hidden>
-        <div class="empty-icon" aria-hidden="true">🎵</div>
-        <p class="empty-title">No tracks yet</p>
-        <p class="empty-hint">Add music folders in Settings to get started</p>
-        <button id="empty-goto-settings" data-variant="primary" data-size="sm">
-          Open Settings
-        </button>
-      </div>
+        <!-- Foldable tree panel (left sidebar) -->
+        <aueio-tree-panel id="library-tree"></aueio-tree-panel>
 
-      <!-- Track list -->
-      <div
-        id="track-list"
-        role="list"
-        aria-label="Music library"
-        hidden
-      ></div>
+        <!-- Table wrapper -->
+        <div id="library-table-wrapper">
+
+          <!-- Loading overlay -->
+          <div id="loading-overlay">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Scanning library…</span>
+          </div>
+
+          <!-- Empty state -->
+          <div id="library-empty" hidden>
+            <div class="empty-icon" aria-hidden="true">🎵</div>
+            <p class="empty-title">No tracks yet</p>
+            <p class="empty-hint">Add music folders in Settings to get started</p>
+            <button id="empty-goto-settings" data-variant="primary" data-size="sm">
+              Open Settings
+            </button>
+          </div>
+
+          <!-- Sort header row -->
+          <div id="library-header-row" role="row" aria-label="Sort columns">
+            <aueio-sort-header sort-key="title" sort-dir="asc"></aueio-sort-header>
+          </div>
+
+          <!-- Track list (CSS grid) -->
+          <div
+            id="track-list"
+            role="grid"
+            aria-label="Music library"
+            hidden
+          ></div>
+
+        </div><!-- /library-table-wrapper -->
+      </div><!-- /library-body -->
+
     </section>
 
     <!-- Settings View -->
@@ -80,6 +98,19 @@
           </div>
         </div>
 
+        <div class="settings-section">
+          <h2 class="settings-section-title">Appearance</h2>
+          <div class="settings-row">
+            <label for="settings-theme">Theme</label>
+            <select id="settings-theme" aria-label="Select theme">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="solarized">Solarized</option>
+              <option value="nord">Nord</option>
+            </select>
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -102,12 +133,15 @@
         <span id="np-album-art-title">🎵</span>
       </div>
 
-      <!-- Track info with blurred bg -->
+      <!-- Track info -->
       <div id="np-track-info">
         <div id="np-track-info-bg" aria-hidden="true"></div>
         <div id="np-title" data-truncate></div>
         <div id="np-artist"></div>
       </div>
+
+      <!-- Extended tags display -->
+      <div id="np-tags" aria-label="Track metadata" class="np-tags-row"></div>
 
       <!-- Waveform progress -->
       <div id="np-waveform-container" role="slider"
@@ -144,30 +178,28 @@
 
   <!-- ── Now Playing bottom bar ──────────────────────────────── -->
   <footer id="now-playing-bar" hidden aria-label="Now Playing mini player">
-    <!-- Album art thumb -->
     <div id="np-bar-album" aria-hidden="true">
       <span id="np-bar-album-icon">🎵</span>
     </div>
 
-    <!-- Track info (click = expand) -->
     <div id="np-bar-info">
       <div id="np-bar-title" data-truncate></div>
       <div id="np-bar-artist" data-truncate></div>
     </div>
 
-    <!-- Waveform mini -->
     <canvas id="np-bar-waveform" height="40" aria-hidden="true"></canvas>
 
-    <!-- Controls -->
     <div id="np-bar-controls">
       <button id="np-bar-prev-btn" data-icon aria-label="Previous">⏮</button>
       <button id="np-bar-play-btn" data-icon aria-label="Play / Pause">▶</button>
       <button id="np-bar-next-btn" data-icon aria-label="Next">⏭</button>
     </div>
 
-    <!-- Expand caret -->
     <button id="np-bar-expand" aria-label="Expand now playing" title="Expand">⌃</button>
   </footer>
+
+  <!-- ── Tag editor dialog ───────────────────────────────────── -->
+  <aueio-tag-dialog id="library-tag-dialog"></aueio-tag-dialog>
 
   <script type="module" src="index.js"></script>
 </body>

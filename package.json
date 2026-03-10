@@ -5,13 +5,17 @@
   "scripts": {
     "dev": "electrobun dev --watch",
     "build": "electrobun build",
-    "test": "npx playwright test"
+    "test": "npx playwright test",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "dependencies": {
     "electrobun": "^1.15.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@types/bun": "latest",
-    "@playwright/test": "^1.40.0"
+    "eslint-plugin-functional": "^9.0.4",
+    "eslint-plugin-unicorn": "^63.0.0"
   }
 }

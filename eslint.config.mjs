@@ -1,6 +1,8 @@
 import stylistic from '@stylistic/eslint-plugin'
 import tsplugin from '@typescript-eslint/eslint-plugin'
 import importPlugin from 'eslint-plugin-import'
+import functionalPlugin from 'eslint-plugin-functional'
+import unicornPlugin from 'eslint-plugin-unicorn'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 import omitPlugin from 'eslint-plugin-omit-unnecessary'
@@ -11,10 +13,12 @@ const plugins = {
   '@stylistic':         stylistic,
   '@typescript-eslint': tsplugin,
   'omit':               omitPlugin,
+  'functional':         functionalPlugin,
+  'unicorn':            unicornPlugin,
 }
 
 const config = {
-  files:           [ 'src/*.{js,jsx,mjs,cjs,ts,tsx}' ],
+  files:           [ 'src/**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
   languageOptions: {
     ecmaVersion: 'latest',
     sourceType:  'module',
@@ -284,6 +288,29 @@ const config = {
     '@typescript-eslint/no-unused-vars': 0,
     '@stylistic/no-mixed-operators':     0,
 
+    // Functional programming rules (prefer immutability, no mutation)
+    'functional/prefer-readonly-type':          [ 'warn', { allowMutableReturnType: true }],
+    'functional/no-let':                        [ 'warn', { allowInForLoopInit: true }],
+    'functional/immutable-data':                [ 'warn', { ignoreIdentifierPattern: [ '^audioEl', '^el' ]}],
+    'functional/no-loop-statements':            [ 'off' ],
+    'functional/no-conditional-statements':     [ 'off' ],
+    'functional/no-expression-statements':      [ 'off' ],
+    'functional/no-return-void':                [ 'off' ],
+    'functional/no-classes':                    [ 'off' ],
+    'functional/no-throw-statements':           [ 'off' ],
+
+    // Unicorn rules (modern JS best practices, selective)
+    'unicorn/prefer-query-selector':            [ 'warn' ],
+    'unicorn/prefer-dom-node-append':           [ 'warn' ],
+    'unicorn/no-array-for-each':                [ 'warn' ],
+    'unicorn/prefer-includes':                  [ 'warn' ],
+    'unicorn/no-for-loop':                      [ 'warn' ],
+    'unicorn/prefer-string-slice':              [ 'warn' ],
+    'unicorn/no-negated-condition':             [ 'warn' ],
+    'unicorn/no-useless-undefined':             [ 'warn' ],
+    'unicorn/prefer-number-properties':         [ 'warn' ],
+    'unicorn/prefer-optional-catch-binding':    [ 'warn' ],
+
     '@stylistic/padding-line-between-statements': [
       'warn',
       { blankLine: 'always', prev: 'directive', next: '*' },
@@ -317,7 +344,7 @@ const config = {
       },
     ],
   },
-  files:           [ '**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
+  files:           [ 'src/**/*.{js,jsx,mjs,cjs,ts,tsx}' ],
   languageOptions: {
     ecmaVersion:   'latest',
     sourceType:    'module',

@@ -25,6 +25,8 @@ const config: ElectrobunConfig = {
       "src/app/styles/states.css": "views/app/styles/states.css",
       "src/app/styles/components.css": "views/app/styles/components.css",
       "src/app/styles/utilities.css": "views/app/styles/utilities.css",
+      "src/app/styles/ui.css": "views/app/styles/ui.css",
+      "src/app/styles/themes.css": "views/app/styles/themes.css",
       "src/app/styles/app.css": "views/app/styles/app.css",
     },
     mac: { bundleCEF: false },

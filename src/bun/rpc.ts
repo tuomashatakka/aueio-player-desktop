@@ -9,20 +9,28 @@ export type Track = {
   duration: number;
   size: number;
   coverColor?: string;
+  // Extended tags
+  genre?: string;
+  year?: number;
+  rating?: number;        // 0–5
+  comment?: string;
+  trackNumber?: number;
+  diskNumber?: number;
 };
+
+export type TrackTagOverrides = Omit<
+  Partial<Track>,
+  'id' | 'path' | 'size' | 'coverColor' | 'duration'
+>;
 
 export type AppSettings = {
   folders: string[];
   volume: number;
   lastTrackPath?: string;
+  theme?: string;
 };
 
 // ─── RPC schema ────────────────────────────────────────────────────────────
-// Convention:
-//   bun.requests   = requests the Bun main-process HANDLES (called from webview)
-//   webview.requests = requests the webview HANDLES (called from bun)
-//   bun.messages   = one-way messages bun RECEIVES from webview
-//   webview.messages = one-way messages webview RECEIVES from bun
 
 export type AppRPCSchema = {
   bun: {
@@ -33,6 +41,8 @@ export type AppRPCSchema = {
       getAudioPort: { params: undefined; response: number };
       pickFolder: { params: undefined; response: string | null };
       getDefaultFolders: { params: undefined; response: string[] };
+      saveTrackTags: { params: { id: string; tags: TrackTagOverrides }; response: void };
+      getTrackTags: { params: undefined; response: Record<string, TrackTagOverrides> };
     };
     messages: {};
   };

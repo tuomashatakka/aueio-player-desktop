@@ -9,6 +9,7 @@ import { homedir } from "os";
 import type { AppRPCSchema } from "./rpc";
 import { loadSettings, saveSettings, getDefaultFolders } from "./settings";
 import { scanLibrary } from "./library";
+import { loadTags, saveTag } from "./tags";
 
 // ─── Audio file MIME types ─────────────────────────────────────────────────
 
@@ -79,7 +80,8 @@ const rpc = defineElectrobunRPC<AppRPCSchema, "bun">("bun", {
       },
 
       scanLibrary: async ({ folders }) => {
-        const tracks = await scanLibrary(folders);
+        const tags = await loadTags();
+        const tracks = await scanLibrary(folders, tags);
         return tracks;
       },
 
@@ -103,6 +105,14 @@ const rpc = defineElectrobunRPC<AppRPCSchema, "bun">("bun", {
       getDefaultFolders: async () => {
         return getDefaultFolders();
       },
+
+      saveTrackTags: async ({ id, tags }) => {
+        await saveTag(id, tags);
+      },
+
+      getTrackTags: async () => {
+        return loadTags();
+      },
     },
   },
 });
@@ -112,7 +122,7 @@ const rpc = defineElectrobunRPC<AppRPCSchema, "bun">("bun", {
 const win = new BrowserWindow({
   title: "Aüeio Player",
   url: "views://app/index.html",
-  frame: { x: 100, y: 80, width: 940, height: 680 },
+  frame: { x: 100, y: 80, width: 1100, height: 720 },
   titleBarStyle: "hiddenInset",
   transparent: false,
   hidden: false,
@@ -133,7 +143,8 @@ const triggerInitialScan = async () => {
   if (!settings.folders.length) return;
 
   console.log(`[aueio] Scanning ${settings.folders.length} folder(s)…`);
-  const tracks = await scanLibrary(settings.folders);
+  const tags = await loadTags();
+  const tracks = await scanLibrary(settings.folders, tags);
   console.log(`[aueio] Found ${tracks.length} tracks`);
 
   // Send update to webview after a short delay to ensure it's ready
