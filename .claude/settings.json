@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run lint:fix 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
