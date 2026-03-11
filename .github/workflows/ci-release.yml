@@ -47,7 +47,7 @@ jobs:
         run: bunx playwright install chromium --with-deps
 
       - name: Run tests
-        run: bun test
+        run: bun run test
 
       - name: Upload test screenshots
         if: always()
