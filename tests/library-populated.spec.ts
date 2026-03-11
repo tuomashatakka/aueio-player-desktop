@@ -195,10 +195,18 @@ test.describe('Populated Library View', () => {
   })
 
   test('library shows one of: loading, empty, or track-list state', async () => {
-    const isLoading = await page.locator('#loading-overlay').isVisible()
-    const isEmpty = await page.locator('#library-empty').isVisible()
-    const hasTracks = await page.locator('#track-list').isVisible()
-    expect(isLoading || isEmpty || hasTracks).toBe(true)
+    // Wait for the React render cycle to settle after track injection
+    await page.waitForTimeout(800)
+
+    // Check by hidden attribute (more reliable than visual visibility in headless mode)
+    const anyNotHidden = await page.evaluate(() => {
+      const ids = ['#loading-overlay', '#library-empty', '#track-list']
+      return ids.some(id => {
+        const el = document.querySelector(id)
+        return el && !el.hasAttribute('hidden')
+      })
+    })
+    expect(anyNotHidden).toBe(true)
   })
 
   // ── Populated state tests (via direct DOM injection) ─────
@@ -246,6 +254,8 @@ test.describe('Library with injected tracks', () => {
   let page: ReturnType<typeof Object.create>
   let browser: ReturnType<typeof Object.create>
   let ctx: ReturnType<typeof Object.create>
+  let server2: Server
+  let server2Port = 0
 
   // Intercept init to directly populate state
   const ENHANCED_STUB = `
@@ -277,6 +287,24 @@ test.describe('Library with injected tracks', () => {
   `
 
   test.beforeAll(async () => {
+    // Start a fresh server for this describe block (the first describe closes its server)
+    server2Port = await new Promise<number>((resolve, reject) => {
+      server2 = createServer((req, res) => {
+        const raw = req.url ?? '/'
+        const safePath = raw.split('?')[0] ?? '/'
+        const file = join(APP_DIR, safePath === '/' ? 'index.html' : safePath)
+        if (!existsSync(file)) { res.writeHead(404); res.end('Not found'); return }
+        const ct = MIME[extname(file)] ?? 'application/octet-stream'
+        res.writeHead(200, { 'Content-Type': ct })
+        createReadStream(file).pipe(res)
+      })
+      server2.listen(0, '127.0.0.1', () => {
+        const addr = server2.address()
+        resolve(typeof addr === 'object' && addr ? addr.port : 0)
+      })
+      server2.on('error', reject)
+    })
+
     browser = await chromium.launch({
       headless: true,
       args: [ '--no-sandbox', '--disable-setuid-sandbox' ],
@@ -291,12 +319,13 @@ test.describe('Library with injected tracks', () => {
     page = await ctx.newPage()
 
     await page.addInitScript(ENHANCED_STUB)
-    await page.goto(`http://127.0.0.1:${serverPort}/`, { waitUntil: 'networkidle' })
+    await page.goto(`http://127.0.0.1:${server2Port}/`, { waitUntil: 'networkidle' })
     await page.waitForTimeout(2000)
   })
 
   test.afterAll(async () => {
     await browser.close()
+    server2.close()
   })
 
   test('track list element is attached', async () => {

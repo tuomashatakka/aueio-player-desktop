@@ -5,16 +5,21 @@
   "scripts": {
     "dev": "electrobun dev --watch",
     "build": "electrobun build",
+    "pretest": "bun build src/app/index.tsx --outfile src/app/index.js --bundle --target browser",
     "test": "npx playwright test",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
   },
   "dependencies": {
-    "electrobun": "^1.15.1"
+    "electrobun": "^1.15.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "@types/bun": "latest",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "eslint-plugin-functional": "^9.0.4",
     "eslint-plugin-unicorn": "^63.0.0"
   }
