@@ -1,56 +1,56 @@
 // ─── Shared domain types ───────────────────────────────────────────────────
 
 export type Track = {
-  id: string;
-  path: string;
-  title: string;
-  artist: string;
-  album: string;
-  duration: number;
-  size: number;
-  coverColor?: string;
+  readonly id:           string;
+  readonly path:         string;
+  readonly title:        string;
+  readonly artist:       string;
+  readonly album:        string;
+  readonly duration:     number;
+  readonly size:         number;
+  readonly coverColor?:  string;
   // Extended tags
-  genre?: string;
-  year?: number;
-  rating?: number;        // 0–5
-  comment?: string;
-  trackNumber?: number;
-  diskNumber?: number;
-};
+  readonly genre?:       string;
+  readonly year?:        number;
+  readonly rating?:      number; // 0–5
+  readonly comment?:     string;
+  readonly trackNumber?: number;
+  readonly diskNumber?:  number;
+}
 
 export type TrackTagOverrides = Omit<
   Partial<Track>,
   'id' | 'path' | 'size' | 'coverColor' | 'duration'
->;
+>
 
 export type AppSettings = {
-  folders: string[];
-  volume: number;
-  lastTrackPath?: string;
-  theme?: string;
-};
+  readonly folders:        readonly string[];
+  readonly volume:         number;
+  readonly lastTrackPath?: string;
+  readonly theme?:         string;
+}
 
 // ─── RPC schema ────────────────────────────────────────────────────────────
 
 export type AppRPCSchema = {
-  bun: {
-    requests: {
-      getSettings: { params: undefined; response: AppSettings };
-      saveSettings: { params: AppSettings; response: void };
-      scanLibrary: { params: { folders: string[] }; response: Track[] };
-      getAudioPort: { params: undefined; response: number };
-      pickFolder: { params: undefined; response: string | null };
-      getDefaultFolders: { params: undefined; response: string[] };
-      saveTrackTags: { params: { id: string; tags: TrackTagOverrides }; response: void };
-      getTrackTags: { params: undefined; response: Record<string, TrackTagOverrides> };
+  readonly bun: {
+    readonly requests: {
+      readonly getSettings:       { readonly params: undefined; readonly response: AppSettings };
+      readonly saveSettings:      { readonly params: AppSettings; readonly response: void };
+      readonly scanLibrary:       { readonly params: { readonly folders: readonly string[] }; readonly response: readonly Track[] };
+      readonly getAudioPort:      { readonly params: undefined; readonly response: number };
+      readonly pickFolder:        { readonly params: undefined; readonly response: string | null };
+      readonly getDefaultFolders: { readonly params: undefined; readonly response: readonly string[] };
+      readonly saveTrackTags:     { readonly params: { readonly id: string; readonly tags: TrackTagOverrides }; readonly response: void };
+      readonly getTrackTags:      { readonly params: undefined; readonly response: Record<string, TrackTagOverrides> };
     };
-    messages: {};
+    readonly messages: Record<string, never>;
   };
-  webview: {
-    requests: {};
-    messages: {
-      libraryUpdated: Track[];
-      settingsSaved: AppSettings;
+  readonly webview: {
+    readonly requests: Record<string, never>;
+    readonly messages: {
+      readonly libraryUpdated: readonly Track[];
+      readonly settingsSaved:  AppSettings;
     };
   };
-};
+}

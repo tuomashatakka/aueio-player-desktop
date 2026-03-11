@@ -2,28 +2,32 @@ import type { ViewName } from '../state/types'
 
 
 type Props = {
-  activeView: ViewName
-  onNav: (view: ViewName) => void
+  readonly activeView: ViewName
+  readonly onNav:      (view: ViewName) => void
 }
 
-export const Topbar = ({ activeView, onNav }: Props) => (
-  <header id="topbar">
-    <span id="app-title">Aüeio</span>
+export const Topbar = ({ activeView, onNav }: Props) =>
+
+  <header id='topbar'>
+    <span id='app-title'>Aüeio</span>
+
     <button
-      id="nav-library"
-      data-nav="library"
+      id='nav-library'
+      data-nav='library'
       className={activeView === 'library' ? 'active' : ''}
-      onClick={() => onNav('library')}
+      onClick={() =>
+        onNav('library')}
     >
       Library
     </button>
+
     <button
-      id="nav-settings"
-      data-nav="settings"
+      id='nav-settings'
+      data-nav='settings'
       className={activeView === 'settings' ? 'active' : ''}
-      onClick={() => onNav('settings')}
+      onClick={() =>
+        onNav('settings')}
     >
       Settings
     </button>
   </header>
-)

@@ -17282,7 +17282,8 @@ var createStore = (initialState2) => {
     getState: () => state,
     dispatch: (action) => {
       state = reducer(state, action);
-      listeners.forEach((fn) => fn(state));
+      for (const fn of listeners)
+        fn(state);
     },
     subscribe: (fn) => {
       listeners.add(fn);
@@ -17772,7 +17773,7 @@ var navigate = (view, replace = false) => {
 };
 var navigateNowPlaying = (expanded) => {
   const ns = { view: "library", nowPlayingExpanded: expanded };
-  history.pushState(ns, "", `#nowplaying`);
+  history.pushState(ns, "", "#nowplaying");
 };
 var getCurrentViewFromURL = () => {
   const hash = location.hash.slice(1);
@@ -17826,7 +17827,7 @@ var TreePanel = ({ tracks, groupBy, selectedNode, expanded, onToggle, onNodeSele
   const titleText = groupBy === "folder" ? "Folders" : groupBy === "artist" ? "Artists" : "Albums";
   return /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
     id: "library-tree",
-    className: `tree-panel${!expanded ? " collapsed" : ""}`,
+    className: `tree-panel${expanded ? "" : " collapsed"}`,
     children: [
       /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
         className: "tree-toolbar",
@@ -18860,7 +18861,7 @@ var FIELDS = [
 ];
 var TagDialog = ({ state, dispatch, onSave }) => {
   const dialogRef = import_react4.useRef(null);
-  const track = state.tagEditingIndex !== null ? state.filteredTracks[state.tagEditingIndex] ?? null : null;
+  const track = state.tagEditingIndex === null ? null : state.filteredTracks[state.tagEditingIndex] ?? null;
   import_react4.useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog)
@@ -18882,7 +18883,7 @@ var TagDialog = ({ state, dispatch, onSave }) => {
     const tags = {};
     const inputs = form.querySelectorAll(".tag-input[data-field]");
     for (const input of inputs) {
-      const field = input.dataset["field"];
+      const field = input.dataset.field;
       const val = input.value.trim();
       if (input.type === "number") {
         const n = Number(val);
@@ -19148,7 +19149,7 @@ var App = ({ store, rpc, engine }) => {
   }, [engine, dispatch, playNext]);
   import_react5.useEffect(() => bindPopState(dispatch), [dispatch]);
   import_react5.useEffect(() => {
-    document.documentElement.dataset["theme"] = state.theme;
+    document.documentElement.dataset.theme = state.theme;
   }, [state.theme]);
   import_react5.useEffect(() => {
     const handler = (e) => {
@@ -19174,7 +19175,7 @@ var App = ({ store, rpc, engine }) => {
         dispatch({ type: "SETTINGS_UPDATED" /* SETTINGS_UPDATED */, payload: settings });
         if (settings.theme) {
           dispatch({ type: "THEME_CHANGED" /* THEME_CHANGED */, payload: settings.theme });
-          document.documentElement.dataset["theme"] = settings.theme;
+          document.documentElement.dataset.theme = settings.theme;
         }
         const volume = settings.volume ?? 1;
         dispatch({ type: "VOLUME_CHANGED" /* VOLUME_CHANGED */, payload: volume });
@@ -19271,7 +19272,7 @@ var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);
 var store = createStore(initialState);
 var rpc = initRPC(store);
 var engine = AudioEngine.getInstance();
-var rootEl = document.getElementById("root");
+var rootEl = document.querySelector("#root");
 if (!rootEl)
   throw new Error("[aueio] No #root element found");
 import_client.createRoot(rootEl).render(/* @__PURE__ */ jsx_dev_runtime14.jsxDEV(App, {

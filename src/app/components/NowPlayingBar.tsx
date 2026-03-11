@@ -9,13 +9,13 @@ import { navigateNowPlaying } from '../navigation/index'
 
 
 type Props = {
-  state: PlayerState
-  dispatch: Store['dispatch']
-  engine: AudioEngine
-  currentTrack: Track | null
-  onPlayNext: () => void
-  onPlayPrev: () => void
-  onTogglePlayPause: () => void
+  readonly state:             PlayerState
+  readonly dispatch:          Store['dispatch']
+  readonly engine:            AudioEngine
+  readonly currentTrack:      Track | null
+  readonly onPlayNext:        () => void
+  readonly onPlayPrev:        () => void
+  readonly onTogglePlayPause: () => void
 }
 
 export const NowPlayingBar = ({
@@ -31,9 +31,10 @@ export const NowPlayingBar = ({
   // Redraw mini waveform
   useEffect(() => {
     const canvas = waveformRef.current
-    if (!canvas || !state.waveformData || !currentTrack) return
+    if (!canvas || !state.waveformData || !currentTrack)
+      return
     drawWaveformToCanvas(canvas, state.waveformData, progress, false)
-  }, [state.waveformData, state.currentTime, state.duration, currentTrack, progress])
+  }, [ state.waveformData, state.currentTime, state.duration, currentTrack, progress ])
 
   const handleExpand = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -43,24 +44,27 @@ export const NowPlayingBar = ({
 
   const handleSeek = (e: React.MouseEvent<HTMLCanvasElement>) => {
     e.stopPropagation()
+
     const canvas = waveformRef.current
-    if (!canvas) return
+    if (!canvas)
+      return
+
     const rect    = canvas.getBoundingClientRect()
     const ratio   = (e.clientX - rect.left) / rect.width
     const newTime = ratio * state.duration
     engine.seek(newTime)
-    dispatch({ type: ActionType.TIME_UPDATED, payload: { currentTime: newTime, duration: engine.duration } })
+    dispatch({ type: ActionType.TIME_UPDATED, payload: { currentTime: newTime, duration: engine.duration }})
   }
 
   return (
     <footer
-      id="now-playing-bar"
+      id='now-playing-bar'
       hidden={!currentTrack}
-      aria-label="Now Playing mini player"
+      aria-label='Now Playing mini player'
     >
-      <div id="np-bar-album" aria-hidden="true">
+      <div id='np-bar-album' aria-hidden='true'>
         <span
-          id="np-bar-album-icon"
+          id='np-bar-album-icon'
           style={{ background: color }}
           onClick={handleExpand}
         >
@@ -68,50 +72,58 @@ export const NowPlayingBar = ({
         </span>
       </div>
 
-      <div id="np-bar-info" onClick={handleExpand}>
-        <div id="np-bar-title" data-truncate>{currentTrack?.title ?? ''}</div>
-        <div id="np-bar-artist" data-truncate>{currentTrack?.artist ?? ''}</div>
+      <div id='np-bar-info' onClick={handleExpand}>
+        <div id='np-bar-title' data-truncate>{currentTrack?.title ?? ''}</div>
+        <div id='np-bar-artist' data-truncate>{currentTrack?.artist ?? ''}</div>
       </div>
 
       <canvas
         ref={waveformRef}
-        id="np-bar-waveform"
+        id='np-bar-waveform'
         height={40}
-        aria-hidden="true"
+        aria-hidden='true'
         onClick={handleSeek}
       />
 
-      <div id="np-bar-controls">
+      <div id='np-bar-controls'>
         <button
-          id="np-bar-prev-btn"
+          id='np-bar-prev-btn'
           data-icon
-          aria-label="Previous"
-          onClick={(e) => { e.stopPropagation(); onPlayPrev() }}
+          aria-label='Previous'
+          onClick={e => {
+            e.stopPropagation(); onPlayPrev()
+          }}
         >
           ⏮
         </button>
+
         <button
-          id="np-bar-play-btn"
+          id='np-bar-play-btn'
           data-icon
-          aria-label="Play / Pause"
-          onClick={(e) => { e.stopPropagation(); onTogglePlayPause() }}
+          aria-label='Play / Pause'
+          onClick={e => {
+            e.stopPropagation(); onTogglePlayPause()
+          }}
         >
           {playIcon}
         </button>
+
         <button
-          id="np-bar-next-btn"
+          id='np-bar-next-btn'
           data-icon
-          aria-label="Next"
-          onClick={(e) => { e.stopPropagation(); onPlayNext() }}
+          aria-label='Next'
+          onClick={e => {
+            e.stopPropagation(); onPlayNext()
+          }}
         >
           ⏭
         </button>
       </div>
 
       <button
-        id="np-bar-expand"
-        aria-label="Expand now playing"
-        title="Expand"
+        id='np-bar-expand'
+        aria-label='Expand now playing'
+        title='Expand'
         onClick={handleExpand}
       >
         ⌃

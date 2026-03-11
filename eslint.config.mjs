@@ -5,14 +5,10 @@ import functionalPlugin from 'eslint-plugin-functional'
 import unicornPlugin from 'eslint-plugin-unicorn'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import omitPlugin from 'eslint-plugin-omit-unnecessary'
-
-
 const plugins = {
   'import':             importPlugin,
   '@stylistic':         stylistic,
   '@typescript-eslint': tsplugin,
-  'omit':               omitPlugin,
   'functional':         functionalPlugin,
   'unicorn':            unicornPlugin,
 }
@@ -26,7 +22,7 @@ const config = {
       ...globals.node,
     },
   },
-  ignores: [ '**/node_modules/**' ],
+  ignores: [ '**/node_modules/**', 'src/app/index.js' ],
   plugins,
 
   rules: {
@@ -97,8 +93,6 @@ const config = {
     'no-func-assign':       [ 'error' ],
     'no-class-assign':      [ 'error' ],
     'no-array-constructor': [ 'error' ],
-
-    'omit/omit-unnecessary-parens-brackets': [ 'warn' ],
 
     // Stylistic formatting opinionations
     // '@stylistic/function-paren-newline':           [ 'warn', 'always' ],
@@ -352,6 +346,8 @@ const config = {
       ecmaFeatures: {
         jsx: true,
       },
+      project: true,
+      tsconfigRootDir: import.meta.dirname,
     },
     globals: {
       ...globals.browser,
@@ -359,4 +355,8 @@ const config = {
   },
 }
 
-export default tseslint.config(...tseslint.configs.recommended, config)
+export default tseslint.config(
+  { ignores: [ 'src/app/index.js', '**/node_modules/**' ] },
+  ...tseslint.configs.recommended,
+  config
+)

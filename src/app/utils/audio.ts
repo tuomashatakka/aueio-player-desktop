@@ -5,7 +5,8 @@ export const buildAudioUrl = (path: string, port: number): string =>
   `http://localhost:${port}/audio?p=${encodeURIComponent(path)}`
 
 export const getTrackEmoji = (track: Track): string => {
-  const ext = track.path.split('.').pop()?.toLowerCase() ?? ''
+  const ext = track.path.split('.').pop()
+    ?.toLowerCase() ?? ''
   const emojiMap: Record<string, string> = {
     mp3:  '\u{1F3B5}',
     flac: '\u{1F3BC}',

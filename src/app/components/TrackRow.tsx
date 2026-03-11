@@ -6,13 +6,13 @@ import { StarRating } from './StarRating'
 
 
 type Props = {
-  track: Track
-  index: number
-  isCurrent: boolean
-  isPlaying: boolean
-  onPlay: (idx: number) => void
-  onEdit: (idx: number, track: Track, focusField?: string) => void
-  onRating: (idx: number, rating: number) => void
+  readonly track:     Track
+  readonly index:     number
+  readonly isCurrent: boolean
+  readonly isPlaying: boolean
+  readonly onPlay:    (idx: number) => void
+  readonly onEdit:    (idx: number, track: Track, focusField?: string) => void
+  readonly onRating:  (idx: number, rating: number) => void
 }
 
 export const TrackRow = ({ track, index, isCurrent, isPlaying, onPlay, onEdit, onRating }: Props) => {
@@ -20,100 +20,113 @@ export const TrackRow = ({ track, index, isCurrent, isPlaying, onPlay, onEdit, o
   const emoji = getTrackEmoji(track)
 
   const handleRowClick = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.tr-edit-btn')) return
-    if ((e.target as HTMLElement).closest('[role="group"]')) return
+    if ((e.target as HTMLElement).closest('.tr-edit-btn'))
+      return
+    if ((e.target as HTMLElement).closest('[role="group"]'))
+      return
     onPlay(index)
   }
 
   return (
     <div
       className={`track-row${isCurrent ? ' current' : ''}${isPlaying ? ' playing' : ''}`}
-      role="row"
+      role='row'
       tabIndex={0}
       data-track-id={track.id}
       onClick={handleRowClick}
-      onKeyDown={(e) => {
+      onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
           onPlay(index)
         }
       }}
     >
-      <span className="tr-num" role="gridcell">{index + 1}</span>
+      <span className='tr-num' role='gridcell'>{index + 1}</span>
 
-      <span className="tr-indicator" role="gridcell" aria-hidden="true">
+      <span className='tr-indicator' role='gridcell' aria-hidden='true'>
         {isPlaying
           ? <PlayingBars />
           : isCurrent
-            ? <span className="tr-current-dot" />
+            ? <span className='tr-current-dot' />
             : null
         }
       </span>
 
-      <span className="tr-cover" role="gridcell">
-        <span className="track-cover-bg" style={{ background: color }} />
-        <span className="track-cover-icon">{emoji}</span>
+      <span className='tr-cover' role='gridcell'>
+        <span className='track-cover-bg' style={{ background: color }} />
+        <span className='track-cover-icon'>{emoji}</span>
       </span>
 
-      <span className="tr-title" role="gridcell" title={track.title}>
+      <span className='tr-title' role='gridcell' title={track.title}>
         {track.title}
       </span>
 
       <span
-        className="tr-artist"
-        role="gridcell"
-        data-editable="artist"
+        className='tr-artist'
+        role='gridcell'
+        data-editable='artist'
         title={track.artist}
-        onClick={(e) => { e.stopPropagation(); onEdit(index, track, 'artist') }}
+        onClick={e => {
+          e.stopPropagation(); onEdit(index, track, 'artist')
+        }}
       >
         {track.artist}
       </span>
 
       <span
-        className="tr-album"
-        role="gridcell"
-        data-editable="album"
+        className='tr-album'
+        role='gridcell'
+        data-editable='album'
         title={track.album}
-        onClick={(e) => { e.stopPropagation(); onEdit(index, track, 'album') }}
+        onClick={e => {
+          e.stopPropagation(); onEdit(index, track, 'album')
+        }}
       >
         {track.album}
       </span>
 
       <span
-        className="tr-genre"
-        role="gridcell"
-        data-editable="genre"
-        onClick={(e) => { e.stopPropagation(); onEdit(index, track, 'genre') }}
+        className='tr-genre'
+        role='gridcell'
+        data-editable='genre'
+        onClick={e => {
+          e.stopPropagation(); onEdit(index, track, 'genre')
+        }}
       >
         {track.genre ?? ''}
       </span>
 
       <span
-        className="tr-year"
-        role="gridcell"
-        data-editable="year"
-        onClick={(e) => { e.stopPropagation(); onEdit(index, track, 'year') }}
+        className='tr-year'
+        role='gridcell'
+        data-editable='year'
+        onClick={e => {
+          e.stopPropagation(); onEdit(index, track, 'year')
+        }}
       >
         {track.year ? String(track.year) : ''}
       </span>
 
-      <span className="tr-duration" role="gridcell">
+      <span className='tr-duration' role='gridcell'>
         {track.duration > 0 ? formatTime(track.duration) : '—'}
       </span>
 
-      <span className="tr-rating" role="gridcell">
+      <span className='tr-rating' role='gridcell'>
         <StarRating
           value={track.rating ?? 0}
-          onChange={(rating) => onRating(index, rating)}
+          onChange={rating =>
+            onRating(index, rating)}
         />
       </span>
 
       <button
-        className="tr-edit-btn"
-        aria-label="Edit tags"
-        title="Edit tags"
+        className='tr-edit-btn'
+        aria-label='Edit tags'
+        title='Edit tags'
         data-idx={index}
-        onClick={(e) => { e.stopPropagation(); onEdit(index, track) }}
+        onClick={e => {
+          e.stopPropagation(); onEdit(index, track)
+        }}
       >
         ✎
       </button>

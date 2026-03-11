@@ -1,28 +1,29 @@
 type Props = {
-  value: number
-  readOnly?: boolean
-  onChange?: (rating: number) => void
+  readonly value:     number
+  readonly readOnly?: boolean
+  readonly onChange?: (rating: number) => void
 }
 
-export const StarRating = ({ value, readOnly, onChange }: Props) => (
+export const StarRating = ({ value, readOnly, onChange }: Props) =>
+
   <span
     role={readOnly ? 'img' : 'group'}
     aria-label={`Rating: ${value} of 5`}
   >
-    {[1, 2, 3, 4, 5].map(i => (
+    {[ 1, 2, 3, 4, 5 ].map(i =>
+
       <button
         key={i}
-        type="button"
+        type='button'
         className={`star${i <= value ? ' filled' : ''}`}
         aria-label={`Rate ${i}`}
         disabled={readOnly}
-        onClick={(e) => {
+        onClick={e => {
           e.stopPropagation()
           onChange?.(i === value ? 0 : i)
         }}
       >
         {i <= value ? '★' : '☆'}
       </button>
-    ))}
+    )}
   </span>
-)
