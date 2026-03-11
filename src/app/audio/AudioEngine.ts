@@ -5,6 +5,7 @@
  * must not be instantiated multiple times.
  */
 export class AudioEngine {
+  // eslint-disable-next-line functional/prefer-readonly-type
   static #instance: AudioEngine | null = null
 
   static getInstance (): AudioEngine {
@@ -15,9 +16,12 @@ export class AudioEngine {
   }
 
   readonly #audioEl: HTMLAudioElement
-  #ctx: AudioContext | null = null
-  #analyser: AnalyserNode | null = null
-  #source: MediaElementAudioSourceNode | null = null
+  // eslint-disable-next-line functional/prefer-readonly-type
+  #ctx:              AudioContext | null = null
+  // eslint-disable-next-line functional/prefer-readonly-type
+  #analyser:         AnalyserNode | null = null
+  // eslint-disable-next-line functional/prefer-readonly-type
+  #source:           MediaElementAudioSourceNode | null = null
 
   private constructor () {
     this.#audioEl = new Audio()
@@ -93,24 +97,34 @@ export class AudioEngine {
   // ─── Event subscriptions (return cleanup fn) ──────────────────
 
   onTimeUpdate (cb: (currentTime: number, duration: number) => void): () => void {
-    const handler = () => cb(this.#audioEl.currentTime, this.#audioEl.duration || 0)
+    const handler = () =>
+      cb(this.#audioEl.currentTime, this.#audioEl.duration || 0)
     this.#audioEl.addEventListener('timeupdate', handler)
-    return () => { this.#audioEl.removeEventListener('timeupdate', handler) }
+    return () => {
+      this.#audioEl.removeEventListener('timeupdate', handler)
+    }
   }
 
   onEnded (cb: () => void): () => void {
     this.#audioEl.addEventListener('ended', cb)
-    return () => { this.#audioEl.removeEventListener('ended', cb) }
+    return () => {
+      this.#audioEl.removeEventListener('ended', cb)
+    }
   }
 
   onError (cb: (e: Event) => void): () => void {
     this.#audioEl.addEventListener('error', cb)
-    return () => { this.#audioEl.removeEventListener('error', cb) }
+    return () => {
+      this.#audioEl.removeEventListener('error', cb)
+    }
   }
 
   onLoadedMetadata (cb: (duration: number) => void): () => void {
-    const handler = () => cb(this.#audioEl.duration || 0)
+    const handler = () =>
+      cb(this.#audioEl.duration || 0)
     this.#audioEl.addEventListener('loadedmetadata', handler)
-    return () => { this.#audioEl.removeEventListener('loadedmetadata', handler) }
+    return () => {
+      this.#audioEl.removeEventListener('loadedmetadata', handler)
+    }
   }
 }

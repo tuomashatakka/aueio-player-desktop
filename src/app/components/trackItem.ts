@@ -16,7 +16,7 @@ export const buildTrackItem = (
   item.className = `track-item${isCurrent ? ' playing' : ''}`
   item.setAttribute('role', 'listitem')
   item.setAttribute('tabindex', '0')
-  item.dataset['trackIdx'] = String(idx)
+  item.dataset.trackIdx = String(idx)
 
   const color = track.coverColor ?? 'hsl(220, 60%, 40%)'
   const emoji = getTrackEmoji(track)
@@ -41,7 +41,8 @@ export const buildTrackItem = (
     <div class='track-playing-indicator' aria-hidden='true'>${playingBars}</div>
   `
 
-  const play = () => dispatch({ type: ActionType.TRACK_SELECTED, payload: idx })
+  const play = () =>
+    dispatch({ type: ActionType.TRACK_SELECTED, payload: idx })
   item.addEventListener('click', play)
   item.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {

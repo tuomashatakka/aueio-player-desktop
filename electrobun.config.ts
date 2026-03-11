@@ -13,7 +13,7 @@ const config: ElectrobunConfig = {
     },
     views: {
       app: {
-        entrypoint: "src/app/index.ts",
+        entrypoint: "src/app/index.tsx",
       },
     },
     copy: {

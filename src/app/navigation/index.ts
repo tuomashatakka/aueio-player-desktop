@@ -4,7 +4,7 @@ import { ActionType } from '../state/actions'
 
 
 export type NavigationState = {
-  readonly view: ViewName
+  readonly view:                ViewName
   readonly nowPlayingExpanded?: boolean
 }
 
@@ -24,7 +24,7 @@ export const navigate = (view: ViewName, replace = false): void => {
 /** Push a now-playing state to history (expanded/collapsed). */
 export const navigateNowPlaying = (expanded: boolean): void => {
   const ns: NavigationState = { view: 'library', nowPlayingExpanded: expanded }
-  history.pushState(ns, '', `#nowplaying`)
+  history.pushState(ns, '', '#nowplaying')
 }
 
 /** Read the initial view from the URL hash on page load. */
@@ -56,5 +56,7 @@ export const bindPopState = (dispatch: Store['dispatch']): () => void => {
   }
 
   window.addEventListener('popstate', handler)
-  return () => { window.removeEventListener('popstate', handler) }
+  return () => {
+    window.removeEventListener('popstate', handler)
+  }
 }

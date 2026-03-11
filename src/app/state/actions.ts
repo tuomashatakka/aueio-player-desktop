@@ -3,55 +3,55 @@ import type { TrackTagOverrides } from '../../bun/rpc'
 
 
 export const enum ActionType {
-  TRACKS_LOADED         = 'TRACKS_LOADED',
-  TRACK_SELECTED        = 'TRACK_SELECTED',
-  PLAYBACK_STARTED      = 'PLAYBACK_STARTED',
-  PLAYBACK_PAUSED       = 'PLAYBACK_PAUSED',
-  TIME_UPDATED          = 'TIME_UPDATED',
-  VOLUME_CHANGED        = 'VOLUME_CHANGED',
-  VIEW_CHANGED          = 'VIEW_CHANGED',
-  NOW_PLAYING_EXPANDED  = 'NOW_PLAYING_EXPANDED',
+  TRACKS_LOADED = 'TRACKS_LOADED',
+  TRACK_SELECTED = 'TRACK_SELECTED',
+  PLAYBACK_STARTED = 'PLAYBACK_STARTED',
+  PLAYBACK_PAUSED = 'PLAYBACK_PAUSED',
+  TIME_UPDATED = 'TIME_UPDATED',
+  VOLUME_CHANGED = 'VOLUME_CHANGED',
+  VIEW_CHANGED = 'VIEW_CHANGED',
+  NOW_PLAYING_EXPANDED = 'NOW_PLAYING_EXPANDED',
   NOW_PLAYING_COLLAPSED = 'NOW_PLAYING_COLLAPSED',
-  SETTINGS_UPDATED      = 'SETTINGS_UPDATED',
-  AUDIO_PORT_SET        = 'AUDIO_PORT_SET',
-  WAVEFORM_LOADED       = 'WAVEFORM_LOADED',
-  SEARCH_CHANGED        = 'SEARCH_CHANGED',
-  LIBRARY_LOADING       = 'LIBRARY_LOADING',
-  DURATION_SET          = 'DURATION_SET',
+  SETTINGS_UPDATED = 'SETTINGS_UPDATED',
+  AUDIO_PORT_SET = 'AUDIO_PORT_SET',
+  WAVEFORM_LOADED = 'WAVEFORM_LOADED',
+  SEARCH_CHANGED = 'SEARCH_CHANGED',
+  LIBRARY_LOADING = 'LIBRARY_LOADING',
+  DURATION_SET = 'DURATION_SET',
   TRACK_DURATION_LOADED = 'TRACK_DURATION_LOADED',
   // New
-  SORT_CHANGED          = 'SORT_CHANGED',
-  THEME_CHANGED         = 'THEME_CHANGED',
-  TAG_EDIT_OPENED       = 'TAG_EDIT_OPENED',
-  TAG_EDIT_CLOSED       = 'TAG_EDIT_CLOSED',
-  TRACK_TAGS_UPDATED    = 'TRACK_TAGS_UPDATED',
-  TREE_TOGGLED          = 'TREE_TOGGLED',
-  TREE_GROUP_CHANGED    = 'TREE_GROUP_CHANGED',
-  TREE_NODE_SELECTED    = 'TREE_NODE_SELECTED',
+  SORT_CHANGED = 'SORT_CHANGED',
+  THEME_CHANGED = 'THEME_CHANGED',
+  TAG_EDIT_OPENED = 'TAG_EDIT_OPENED',
+  TAG_EDIT_CLOSED = 'TAG_EDIT_CLOSED',
+  TRACK_TAGS_UPDATED = 'TRACK_TAGS_UPDATED',
+  TREE_TOGGLED = 'TREE_TOGGLED',
+  TREE_GROUP_CHANGED = 'TREE_GROUP_CHANGED',
+  TREE_NODE_SELECTED = 'TREE_NODE_SELECTED',
 }
 
 export type Action =
-  | { type: ActionType.TRACKS_LOADED;         payload: readonly Track[] }
-  | { type: ActionType.TRACK_SELECTED;        payload: number }
-  | { type: ActionType.PLAYBACK_STARTED }
-  | { type: ActionType.PLAYBACK_PAUSED }
-  | { type: ActionType.TIME_UPDATED;          payload: { currentTime: number; duration: number } }
-  | { type: ActionType.VOLUME_CHANGED;        payload: number }
-  | { type: ActionType.VIEW_CHANGED;          payload: ViewName }
-  | { type: ActionType.NOW_PLAYING_EXPANDED }
-  | { type: ActionType.NOW_PLAYING_COLLAPSED }
-  | { type: ActionType.SETTINGS_UPDATED;      payload: AppSettings }
-  | { type: ActionType.AUDIO_PORT_SET;        payload: number }
-  | { type: ActionType.WAVEFORM_LOADED;       payload: Float32Array | null }
-  | { type: ActionType.SEARCH_CHANGED;        payload: string }
-  | { type: ActionType.LIBRARY_LOADING }
-  | { type: ActionType.DURATION_SET;          payload: number }
-  | { type: ActionType.TRACK_DURATION_LOADED; payload: { index: number; duration: number } }
-  | { type: ActionType.SORT_CHANGED;          payload: { key: SortKey; dir: SortDir } }
-  | { type: ActionType.THEME_CHANGED;         payload: ThemeName }
-  | { type: ActionType.TAG_EDIT_OPENED;       payload: number }
-  | { type: ActionType.TAG_EDIT_CLOSED }
-  | { type: ActionType.TRACK_TAGS_UPDATED;    payload: { id: string; tags: TrackTagOverrides } }
-  | { type: ActionType.TREE_TOGGLED }
-  | { type: ActionType.TREE_GROUP_CHANGED;    payload: TreeGroupBy }
-  | { type: ActionType.TREE_NODE_SELECTED;    payload: string | null }
+  | { readonly type: ActionType.TRACKS_LOADED; readonly payload: readonly Track[] } |
+  { readonly type: ActionType.TRACK_SELECTED; readonly payload: number } |
+  { readonly type: ActionType.PLAYBACK_STARTED } |
+  { readonly type: ActionType.PLAYBACK_PAUSED } |
+  { readonly type: ActionType.TIME_UPDATED; readonly payload: { readonly currentTime: number; readonly duration: number }} |
+  { readonly type: ActionType.VOLUME_CHANGED; readonly payload: number } |
+  { readonly type: ActionType.VIEW_CHANGED; readonly payload: ViewName } |
+  { readonly type: ActionType.NOW_PLAYING_EXPANDED } |
+  { readonly type: ActionType.NOW_PLAYING_COLLAPSED } |
+  { readonly type: ActionType.SETTINGS_UPDATED; readonly payload: AppSettings } |
+  { readonly type: ActionType.AUDIO_PORT_SET; readonly payload: number } |
+  { readonly type: ActionType.WAVEFORM_LOADED; readonly payload: Float32Array | null } |
+  { readonly type: ActionType.SEARCH_CHANGED; readonly payload: string } |
+  { readonly type: ActionType.LIBRARY_LOADING } |
+  { readonly type: ActionType.DURATION_SET; readonly payload: number } |
+  { readonly type: ActionType.TRACK_DURATION_LOADED; readonly payload: { readonly index: number; readonly duration: number }} |
+  { readonly type: ActionType.SORT_CHANGED; readonly payload: { readonly key: SortKey; readonly dir: SortDir }} |
+  { readonly type: ActionType.THEME_CHANGED; readonly payload: ThemeName } |
+  { readonly type: ActionType.TAG_EDIT_OPENED; readonly payload: number } |
+  { readonly type: ActionType.TAG_EDIT_CLOSED } |
+  { readonly type: ActionType.TRACK_TAGS_UPDATED; readonly payload: { readonly id: string; readonly tags: TrackTagOverrides }} |
+  { readonly type: ActionType.TREE_TOGGLED } |
+  { readonly type: ActionType.TREE_GROUP_CHANGED; readonly payload: TreeGroupBy } |
+  { readonly type: ActionType.TREE_NODE_SELECTED; readonly payload: string | null }
