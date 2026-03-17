@@ -1,10 +1,13 @@
+import { memo } from 'react'
+
+
 type Props = {
   readonly folder:   string
   readonly index:    number
   readonly onRemove: (index: number) => void
 }
 
-export const FolderItem = ({ folder, index, onRemove }: Props) =>
+export const FolderItem = memo(({ folder, index, onRemove }: Props) =>
 
   <div className='folder-item'>
     <span className='folder-icon'>📁</span>
@@ -20,3 +23,4 @@ export const FolderItem = ({ folder, index, onRemove }: Props) =>
       ×
     </button>
   </div>
+)

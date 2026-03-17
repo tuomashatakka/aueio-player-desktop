@@ -1,4 +1,5 @@
-import type { SortKey, SortDir } from '../state/types'
+import { memo } from 'react'
+import type { SortKey, SortDir } from '../../state/types'
 
 
 type ColDef = { readonly key: SortKey | ''; readonly label: string; readonly cls: string }
@@ -23,7 +24,7 @@ type Props = {
   readonly onSort:  (key: SortKey, dir: SortDir) => void
 }
 
-export const SortHeader = ({ sortKey, sortDir, onSort }: Props) => {
+export const SortHeader = memo(({ sortKey, sortDir, onSort }: Props) => {
   const handleClick = (key: SortKey) => {
     const dir: SortDir = key === sortKey && sortDir === 'asc' ? 'desc' : 'asc'
     onSort(key, dir)
@@ -64,4 +65,4 @@ export const SortHeader = ({ sortKey, sortDir, onSort }: Props) => {
       })}
     </div>
   )
-}
+})

@@ -1,48 +1,51 @@
-import { useRef, useEffect } from 'react'
-import type { PlayerState, Track } from '../state/types'
-import type { Store } from '../state/index'
-import type { AudioEngine } from '../audio/AudioEngine'
-import { ActionType } from '../state/actions'
-import { drawWaveformToCanvas } from '../audio/waveform'
-import { getTrackEmoji } from '../utils/audio'
-import { navigateNowPlaying } from '../navigation/index'
+import { useRef, useEffect, memo, useCallback } from 'react'
+import { ActionType } from '../../state/actions'
+import { useSelector, useDispatch } from '../../hooks/useSelector'
+import { useEngine } from '../../context'
+import {
+  selectIsPlaying, selectCurrentTime, selectDuration,
+  selectWaveformData, selectCurrentTrack, selectProgress,
+} from '../../selectors/index'
+import { drawWaveformToCanvas } from '../../audio/waveform'
+import { getTrackEmoji } from '../../utils/audio'
+import { navigateNowPlaying } from '../../navigation/index'
 
 
 type Props = {
-  readonly state:             PlayerState
-  readonly dispatch:          Store['dispatch']
-  readonly engine:            AudioEngine
-  readonly currentTrack:      Track | null
   readonly onPlayNext:        () => void
   readonly onPlayPrev:        () => void
   readonly onTogglePlayPause: () => void
 }
 
-export const NowPlayingBar = ({
-  state, dispatch, engine, currentTrack,
-  onPlayNext, onPlayPrev, onTogglePlayPause,
-}: Props) => {
+export const NowPlayingBar = memo(({ onPlayNext, onPlayPrev, onTogglePlayPause }: Props) => {
   const waveformRef = useRef<HTMLCanvasElement>(null)
+  const dispatch    = useDispatch()
+  const engine      = useEngine()
 
-  const playIcon = state.isPlaying ? '⏸' : '▶'
+  const isPlaying    = useSelector(selectIsPlaying)
+  const duration     = useSelector(selectDuration)
+  const waveformData = useSelector(selectWaveformData)
+  const currentTrack = useSelector(selectCurrentTrack)
+  const progress     = useSelector(selectProgress)
+
+  const playIcon = isPlaying ? '⏸' : '▶'
   const color    = currentTrack?.coverColor ?? 'hsl(220,60%,40%)'
-  const progress = state.duration > 0 ? state.currentTime / state.duration : 0
 
   // Redraw mini waveform
   useEffect(() => {
     const canvas = waveformRef.current
-    if (!canvas || !state.waveformData || !currentTrack)
+    if (!canvas || !waveformData || !currentTrack)
       return
-    drawWaveformToCanvas(canvas, state.waveformData, progress, false)
-  }, [ state.waveformData, state.currentTime, state.duration, currentTrack, progress ])
+    drawWaveformToCanvas(canvas, waveformData, progress, false)
+  }, [ waveformData, progress, currentTrack ])
 
-  const handleExpand = (e: React.MouseEvent) => {
+  const handleExpand = useCallback((e: React.MouseEvent) => {
     e.stopPropagation()
     dispatch({ type: ActionType.NOW_PLAYING_EXPANDED })
     navigateNowPlaying(true)
-  }
+  }, [ dispatch ])
 
-  const handleSeek = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleSeek = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     e.stopPropagation()
 
     const canvas = waveformRef.current
@@ -51,10 +54,22 @@ export const NowPlayingBar = ({
 
     const rect    = canvas.getBoundingClientRect()
     const ratio   = (e.clientX - rect.left) / rect.width
-    const newTime = ratio * state.duration
+    const newTime = ratio * duration
     engine.seek(newTime)
     dispatch({ type: ActionType.TIME_UPDATED, payload: { currentTime: newTime, duration: engine.duration }})
-  }
+  }, [ engine, dispatch, duration ])
+
+  const handlePrevClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); onPlayPrev()
+  }, [ onPlayPrev ])
+
+  const handlePlayClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); onTogglePlayPause()
+  }, [ onTogglePlayPause ])
+
+  const handleNextClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation(); onPlayNext()
+  }, [ onPlayNext ])
 
   return (
     <footer
@@ -90,9 +105,7 @@ export const NowPlayingBar = ({
           id='np-bar-prev-btn'
           data-icon
           aria-label='Previous'
-          onClick={e => {
-            e.stopPropagation(); onPlayPrev()
-          }}
+          onClick={handlePrevClick}
         >
           ⏮
         </button>
@@ -101,9 +114,7 @@ export const NowPlayingBar = ({
           id='np-bar-play-btn'
           data-icon
           aria-label='Play / Pause'
-          onClick={e => {
-            e.stopPropagation(); onTogglePlayPause()
-          }}
+          onClick={handlePlayClick}
         >
           {playIcon}
         </button>
@@ -112,9 +123,7 @@ export const NowPlayingBar = ({
           id='np-bar-next-btn'
           data-icon
           aria-label='Next'
-          onClick={e => {
-            e.stopPropagation(); onPlayNext()
-          }}
+          onClick={handleNextClick}
         >
           ⏭
         </button>
@@ -130,4 +139,4 @@ export const NowPlayingBar = ({
       </button>
     </footer>
   )
-}
+})

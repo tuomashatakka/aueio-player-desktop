@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client'
 import { createStore, initialState } from './state/index'
 import { initRPC } from './rpc/index'
 import { AudioEngine } from './audio/AudioEngine'
-import { App } from './components/App'
+import { App } from './components/view/App'
 
 
 const store  = createStore(initialState)

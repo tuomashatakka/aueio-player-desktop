@@ -1,7 +1,8 @@
-import { useRef, useEffect } from 'react'
-import type { PlayerState, Track } from '../state/types'
-import type { Store } from '../state/index'
-import { ActionType } from '../state/actions'
+import { useRef, useEffect, memo, useCallback } from 'react'
+import type { Track } from '../../state/types'
+import { ActionType } from '../../state/actions'
+import { useSelector, useDispatch } from '../../hooks/useSelector'
+import { selectTagEditingIndex, selectFilteredTracks } from '../../selectors/index'
 
 
 type TagField = {
@@ -25,17 +26,18 @@ const FIELDS: readonly TagField[] = [
 ]
 
 type Props = {
-  readonly state:    PlayerState
-  readonly dispatch: Store['dispatch']
-  readonly onSave:   (idx: number, tags: Partial<Track>) => void
+  readonly onSave: (idx: number, tags: Partial<Track>) => void
 }
 
-export const TagDialog = ({ state, dispatch, onSave }: Props) => {
+export const TagDialog = memo(({ onSave }: Props) => {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const dispatch = useDispatch()
+  const tagEditingIndex = useSelector(selectTagEditingIndex)
+  const filteredTracks  = useSelector(selectFilteredTracks)
 
-  const track = state.tagEditingIndex === null
+  const track = tagEditingIndex === null
     ? null
-    : state.filteredTracks[state.tagEditingIndex] ?? null
+    : filteredTracks[tagEditingIndex] ?? null
 
   // Sync dialog open/close with state
   useEffect(() => {
@@ -43,21 +45,21 @@ export const TagDialog = ({ state, dispatch, onSave }: Props) => {
     if (!dialog)
       return
 
-    if (state.tagEditingIndex !== null && !dialog.open) {
+    if (tagEditingIndex !== null && !dialog.open) {
       dialog.showModal()
     }
-    else if (state.tagEditingIndex === null && dialog.open) {
+    else if (tagEditingIndex === null && dialog.open) {
       dialog.close()
     }
-  }, [ state.tagEditingIndex ])
+  }, [ tagEditingIndex ])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch({ type: ActionType.TAG_EDIT_CLOSED })
-  }
+  }, [ dispatch ])
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (state.tagEditingIndex === null)
+    if (tagEditingIndex === null)
       return
 
     const form = e.currentTarget
@@ -82,14 +84,14 @@ export const TagDialog = ({ state, dispatch, onSave }: Props) => {
       }
     }
 
-    onSave(state.tagEditingIndex, tags)
+    onSave(tagEditingIndex, tags)
     dispatch({ type: ActionType.TAG_EDIT_CLOSED })
-  }
+  }, [ tagEditingIndex, onSave, dispatch ])
 
-  const handleBackdropClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+  const handleBackdropClick = useCallback((e: React.MouseEvent<HTMLDialogElement>) => {
     if (e.target === dialogRef.current)
       handleClose()
-  }
+  }, [ handleClose ])
 
   return (
     <div id='library-tag-dialog'>
@@ -114,7 +116,7 @@ export const TagDialog = ({ state, dispatch, onSave }: Props) => {
 
         {/* key resets form inputs when editing a different track */}
         <form
-          key={state.tagEditingIndex ?? 'none'}
+          key={tagEditingIndex ?? 'none'}
           className='tag-dialog-form'
           onSubmit={handleSave}
         >
@@ -177,4 +179,4 @@ export const TagDialog = ({ state, dispatch, onSave }: Props) => {
       </dialog>
     </div>
   )
-}
+})

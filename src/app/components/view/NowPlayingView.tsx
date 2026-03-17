@@ -1,52 +1,61 @@
-import { useRef, useEffect } from 'react'
-import type { PlayerState } from '../state/types'
-import type { Store } from '../state/index'
-import type { AudioEngine } from '../audio/AudioEngine'
-import { ActionType } from '../state/actions'
-import { drawWaveformToCanvas } from '../audio/waveform'
-import { getTrackEmoji } from '../utils/audio'
-import { formatTime } from '../utils/dom'
+import { useRef, useEffect, memo, useCallback } from 'react'
+import { ActionType } from '../../state/actions'
+import { useSelector, useDispatch } from '../../hooks/useSelector'
+import { usePlayback } from '../../hooks/usePlayback'
+import { useEngine } from '../../context'
+import {
+  selectIsNowPlayingExpanded, selectCurrentTrack, selectIsPlaying,
+  selectCurrentTime, selectDuration, selectVolume, selectWaveformData, selectProgress,
+} from '../../selectors/index'
+import { drawWaveformToCanvas } from '../../audio/waveform'
+import { getTrackEmoji } from '../../utils/audio'
+import { formatTime } from '../../utils/dom'
 
 
 type Props = {
-  readonly state:             PlayerState
-  readonly dispatch:          Store['dispatch']
-  readonly engine:            AudioEngine
   readonly onPlayNext:        () => void
   readonly onPlayPrev:        () => void
   readonly onTogglePlayPause: () => void
 }
 
-export const NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev, onTogglePlayPause }: Props) => {
+export const NowPlayingView = memo(({ onPlayNext, onPlayPrev, onTogglePlayPause }: Props) => {
   const waveformRef = useRef<HTMLCanvasElement>(null)
+  const dispatch    = useDispatch()
+  const engine      = useEngine()
 
-  const track = state.currentTrackIndex >= 0
-    ? state.filteredTracks[state.currentTrackIndex] ?? null
-    : null
+  const isExpanded  = useSelector(selectIsNowPlayingExpanded)
+  const track       = useSelector(selectCurrentTrack)
+  const isPlaying   = useSelector(selectIsPlaying)
+  const currentTime = useSelector(selectCurrentTime)
+  const duration    = useSelector(selectDuration)
+  const volume      = useSelector(selectVolume)
+  const waveformData = useSelector(selectWaveformData)
+  const progress    = useSelector(selectProgress)
 
-  const playIcon   = state.isPlaying ? '⏸' : '▶'
-  const color      = track?.coverColor ?? 'hsl(220,60%,40%)'
-  const progress   = state.duration > 0 ? state.currentTime / state.duration : 0
+  const { seek } = usePlayback()
+
+  const playIcon = isPlaying ? '⏸' : '▶'
+  const color    = track?.coverColor ?? 'hsl(220,60%,40%)'
 
   // Redraw waveform when data or progress changes
   useEffect(() => {
     const canvas = waveformRef.current
-    if (!canvas || !state.waveformData)
+    if (!canvas || !waveformData)
       return
-    drawWaveformToCanvas(canvas, state.waveformData, progress, true)
-  }, [ state.waveformData, state.currentTime, state.duration, progress ])
+    drawWaveformToCanvas(canvas, waveformData, progress, true)
+  }, [ waveformData, progress ])
 
-  const handleSeek = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleSeek = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = waveformRef.current
     if (!canvas)
       return
 
     const rect  = canvas.getBoundingClientRect()
     const ratio = (e.clientX - rect.left) / rect.width
-    const newTime = ratio * state.duration
+    const newTime = ratio * duration
     engine.seek(newTime)
     dispatch({ type: ActionType.TIME_UPDATED, payload: { currentTime: newTime, duration: engine.duration }})
-  }
+  }, [ engine, dispatch, duration ])
 
   // Tag display items
   const tagItems = track
@@ -66,7 +75,7 @@ export const NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev
   return (
     <section
       id='now-playing-view'
-      className={state.isNowPlayingExpanded ? 'active' : ''}
+      className={isExpanded ? 'active' : ''}
       role='region'
       aria-label='Now Playing'
     >
@@ -89,7 +98,7 @@ export const NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev
         <div
           id='np-album-art'
           aria-hidden='true'
-          className={state.isPlaying ? 'playing' : ''}
+          className={isPlaying ? 'playing' : ''}
           style={{ background: color }}
         >
           <span id='np-album-art-title'>{track ? getTrackEmoji(track) : '🎵'}</span>
@@ -127,8 +136,8 @@ export const NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev
           />
 
           <div id='np-time-row'>
-            <span id='np-current-time'>{formatTime(state.currentTime)}</span>
-            <span id='np-duration'>{formatTime(state.duration)}</span>
+            <span id='np-current-time'>{formatTime(currentTime)}</span>
+            <span id='np-duration'>{formatTime(duration)}</span>
           </div>
         </div>
 
@@ -147,7 +156,7 @@ export const NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev
             min={0}
             max={1}
             step={0.01}
-            value={state.volume}
+            value={volume}
             aria-label='Volume'
             onChange={e => {
               const vol = Number.parseFloat(e.target.value)
@@ -162,4 +171,4 @@ export const NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev
       </div>
     </section>
   )
-}
+})

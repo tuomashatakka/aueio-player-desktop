@@ -1,4 +1,5 @@
-import type { Track, TreeGroupBy } from '../state/types'
+import { memo, useMemo } from 'react'
+import type { Track, TreeGroupBy } from '../../state/types'
 
 
 type TreeNode = { readonly label: string; readonly count: number; readonly key: string }
@@ -39,8 +40,9 @@ type Props = {
   readonly onGroupChange: (groupBy: TreeGroupBy) => void
 }
 
-export const TreePanel = ({ tracks, groupBy, selectedNode, expanded, onToggle, onNodeSelect, onGroupChange }: Props) => {
-  const nodes = buildNodes(tracks, groupBy)
+export const TreePanel = memo(({ tracks, groupBy, selectedNode, expanded, onToggle, onNodeSelect, onGroupChange }: Props) => {
+  const nodes = useMemo(() =>
+    buildNodes(tracks, groupBy), [ tracks, groupBy ])
   const titleText = groupBy === 'folder' ? 'Folders' : groupBy === 'artist' ? 'Artists' : 'Albums'
 
   return (
@@ -139,4 +141,4 @@ export const TreePanel = ({ tracks, groupBy, selectedNode, expanded, onToggle, o
       }
     </div>
   )
-}
+})

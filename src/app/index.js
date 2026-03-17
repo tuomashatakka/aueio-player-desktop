@@ -17728,40 +17728,253 @@ class AudioEngine {
   }
 }
 
-// src/app/components/App.tsx
-var import_react5 = __toESM(require_react(), 1);
-
 // src/app/context.tsx
 var import_react = __toESM(require_react(), 1);
 var StoreContext = import_react.createContext(null);
 var RPCContext = import_react.createContext(null);
 var EngineContext = import_react.createContext(null);
+var useStore = () => {
+  const ctx = import_react.useContext(StoreContext);
+  if (!ctx)
+    throw new Error("StoreContext not provided");
+  return ctx;
+};
+var useRPC = () => {
+  const ctx = import_react.useContext(RPCContext);
+  if (!ctx)
+    throw new Error("RPCContext not provided");
+  return ctx;
+};
+var useEngine = () => {
+  const ctx = import_react.useContext(EngineContext);
+  if (!ctx)
+    throw new Error("EngineContext not provided");
+  return ctx;
+};
 
-// src/app/components/Topbar.tsx
-var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
-var Topbar = ({ activeView, onNav }) => /* @__PURE__ */ jsx_dev_runtime.jsxDEV("header", {
-  id: "topbar",
-  children: [
-    /* @__PURE__ */ jsx_dev_runtime.jsxDEV("span", {
-      id: "app-title",
-      children: "Aüeio"
-    }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime.jsxDEV("button", {
-      id: "nav-library",
-      "data-nav": "library",
-      className: activeView === "library" ? "active" : "",
-      onClick: () => onNav("library"),
-      children: "Library"
-    }, undefined, false, undefined, this),
-    /* @__PURE__ */ jsx_dev_runtime.jsxDEV("button", {
-      id: "nav-settings",
-      "data-nav": "settings",
-      className: activeView === "settings" ? "active" : "",
-      onClick: () => onNav("settings"),
-      children: "Settings"
-    }, undefined, false, undefined, this)
-  ]
-}, undefined, true, undefined, this);
+// src/app/hooks/useSelector.ts
+var import_react2 = __toESM(require_react(), 1);
+var useSelector = (selector) => {
+  const store = useStore();
+  const snap = import_react2.useCallback(() => selector(store.getState()), [store, selector]);
+  return import_react2.useSyncExternalStore(store.subscribe, snap);
+};
+var useDispatch = () => {
+  const store = useStore();
+  return store.dispatch;
+};
+// src/app/hooks/usePlayback.ts
+var import_react3 = __toESM(require_react(), 1);
+
+// src/app/utils/audio.ts
+var buildAudioUrl = (path, port) => `http://localhost:${port}/audio?p=${encodeURIComponent(path)}`;
+var getTrackEmoji = (track) => {
+  const ext = track.path.split(".").pop()?.toLowerCase() ?? "";
+  const emojiMap = {
+    mp3: "\uD83C\uDFB5",
+    flac: "\uD83C\uDFBC",
+    wav: "\uD83D\uDD0A",
+    m4a: "\uD83C\uDFB6",
+    ogg: "\uD83C\uDFB5",
+    aac: "\uD83C\uDFB5",
+    opus: "\uD83C\uDFB5",
+    wma: "\uD83C\uDFB5"
+  };
+  return emojiMap[ext] ?? "\uD83C\uDFB5";
+};
+
+// src/app/audio/waveform.ts
+var WAVEFORM_SAMPLES = 200;
+var loadWaveformData = async (url, ctx) => {
+  const resp = await fetch(url);
+  const arrayBuf = await resp.arrayBuffer();
+  const audioBuf = await ctx.decodeAudioData(arrayBuf);
+  const channelData = audioBuf.getChannelData(0);
+  const blockSize = Math.floor(channelData.length / WAVEFORM_SAMPLES);
+  const waveform = new Float32Array(WAVEFORM_SAMPLES);
+  for (let i = 0;i < WAVEFORM_SAMPLES; i++) {
+    let sum = 0;
+    const start = i * blockSize;
+    for (let j = 0;j < blockSize; j++)
+      sum += Math.abs(channelData[start + j] ?? 0);
+    waveform[i] = sum / blockSize;
+  }
+  const max = Math.max(...Array.from(waveform), 0.001);
+  for (let i = 0;i < waveform.length; i++)
+    waveform[i] = (waveform[i] ?? 0) / max;
+  return waveform;
+};
+var drawWaveformToCanvas = (canvas, waveform, progress, showProgress) => {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || canvas.offsetWidth || 400;
+  const h = rect.height || canvas.offsetHeight || 80;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext("2d");
+  if (!ctx)
+    return;
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  const progressX = progress * w;
+  const barW = w / waveform.length;
+  const gap = Math.max(1, barW * 0.15);
+  const barActual = barW - gap;
+  for (let i = 0;i < waveform.length; i++) {
+    const amp = waveform[i] ?? 0;
+    const barH = Math.max(2, amp * h * 0.85);
+    const x = i * barW;
+    const y = (h - barH) / 2;
+    const isPast = showProgress && x + barActual < progressX;
+    const isCurrent = showProgress && x <= progressX && x + barActual >= progressX;
+    if (isPast)
+      ctx.fillStyle = "#3a86ff";
+    else if (isCurrent)
+      ctx.fillStyle = "#ff5500";
+    else
+      ctx.fillStyle = showProgress ? "rgba(255,255,255,0.15)" : "rgba(58,134,255,0.4)";
+    ctx.beginPath();
+    ctx.roundRect(x, y, Math.max(1, barActual), barH, 1.5);
+    ctx.fill();
+  }
+};
+
+// src/app/hooks/usePlayback.ts
+var usePlayback = () => {
+  const store = useStore();
+  const engine = useEngine();
+  const storeRef = import_react3.useRef(store);
+  storeRef.current = store;
+  const engineRef = import_react3.useRef(engine);
+  engineRef.current = engine;
+  const playCurrentTrack = import_react3.useCallback(async () => {
+    const s = storeRef.current.getState();
+    const { filteredTracks, currentTrackIndex, audioPort } = s;
+    const track = filteredTracks[currentTrackIndex];
+    if (!track)
+      return;
+    const url = buildAudioUrl(track.path, audioPort);
+    try {
+      await engineRef.current.play(url);
+      storeRef.current.dispatch({ type: "PLAYBACK_STARTED" /* PLAYBACK_STARTED */ });
+    } catch {
+      storeRef.current.dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
+      return;
+    }
+    const ctx = engineRef.current.audioContext;
+    if (!ctx || !audioPort)
+      return;
+    try {
+      const waveform = await loadWaveformData(url, ctx);
+      storeRef.current.dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: waveform });
+    } catch {
+      storeRef.current.dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: new Float32Array(200).fill(0.3) });
+    }
+  }, []);
+  const playNext = import_react3.useCallback(() => {
+    const { filteredTracks } = storeRef.current.getState();
+    if (!filteredTracks.length)
+      return;
+    const { currentTrackIndex } = storeRef.current.getState();
+    const next = (currentTrackIndex + 1) % filteredTracks.length;
+    storeRef.current.dispatch({ type: "TRACK_SELECTED" /* TRACK_SELECTED */, payload: next });
+    playCurrentTrack().catch(console.error);
+  }, [playCurrentTrack]);
+  const playPrev = import_react3.useCallback(() => {
+    const { filteredTracks } = storeRef.current.getState();
+    if (!filteredTracks.length)
+      return;
+    const { currentTrackIndex } = storeRef.current.getState();
+    if (engineRef.current.currentTime > 3) {
+      engineRef.current.seek(0);
+      storeRef.current.dispatch({ type: "TIME_UPDATED" /* TIME_UPDATED */, payload: { currentTime: 0, duration: engineRef.current.duration } });
+      return;
+    }
+    const prev = (currentTrackIndex - 1 + filteredTracks.length) % filteredTracks.length;
+    storeRef.current.dispatch({ type: "TRACK_SELECTED" /* TRACK_SELECTED */, payload: prev });
+    playCurrentTrack().catch(console.error);
+  }, [playCurrentTrack]);
+  const togglePlayPause = import_react3.useCallback(() => {
+    const s = storeRef.current.getState();
+    const { isPlaying, currentTrackIndex, filteredTracks } = s;
+    if (currentTrackIndex < 0 || !filteredTracks.length)
+      return;
+    if (isPlaying) {
+      engineRef.current.pause();
+      storeRef.current.dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
+    } else {
+      engineRef.current.resume().then(() => storeRef.current.dispatch({ type: "PLAYBACK_STARTED" /* PLAYBACK_STARTED */ })).catch(() => storeRef.current.dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ }));
+    }
+  }, []);
+  const selectAndPlay = import_react3.useCallback(async (idx) => {
+    const s = storeRef.current.getState();
+    const track = s.filteredTracks[idx];
+    if (!track)
+      return;
+    if (idx === s.currentTrackIndex && s.isPlaying) {
+      engineRef.current.pause();
+      storeRef.current.dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
+      return;
+    }
+    storeRef.current.dispatch({ type: "TRACK_SELECTED" /* TRACK_SELECTED */, payload: idx });
+    const url = buildAudioUrl(track.path, s.audioPort);
+    try {
+      await engineRef.current.play(url);
+      storeRef.current.dispatch({ type: "PLAYBACK_STARTED" /* PLAYBACK_STARTED */ });
+    } catch {
+      storeRef.current.dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
+      return;
+    }
+    const ctx = engineRef.current.audioContext;
+    if (!ctx || !s.audioPort)
+      return;
+    try {
+      const waveform = await loadWaveformData(url, ctx);
+      storeRef.current.dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: waveform });
+    } catch {
+      storeRef.current.dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: new Float32Array(200).fill(0.3) });
+    }
+  }, []);
+  const seek = import_react3.useCallback((ratio) => {
+    const duration = storeRef.current.getState().duration;
+    const newTime = ratio * duration;
+    engineRef.current.seek(newTime);
+    storeRef.current.dispatch({ type: "TIME_UPDATED" /* TIME_UPDATED */, payload: { currentTime: newTime, duration: engineRef.current.duration } });
+  }, []);
+  return { playCurrentTrack, playNext, playPrev, togglePlayPause, selectAndPlay, seek };
+};
+// src/app/hooks/useEngineEvents.ts
+var import_react4 = __toESM(require_react(), 1);
+var useEngineEvents = (onTrackEnded) => {
+  const store = useStore();
+  const engine = useEngine();
+  const storeRef = import_react4.useRef(store);
+  storeRef.current = store;
+  const engineRef = import_react4.useRef(engine);
+  engineRef.current = engine;
+  const onTrackEndedRef = import_react4.useRef(onTrackEnded);
+  onTrackEndedRef.current = onTrackEnded;
+  import_react4.useEffect(() => {
+    const cleanupTime = engineRef.current.onTimeUpdate((currentTime, duration) => {
+      storeRef.current.dispatch({ type: "TIME_UPDATED" /* TIME_UPDATED */, payload: { currentTime, duration } });
+    });
+    const cleanupEnded = engineRef.current.onEnded(() => {
+      onTrackEndedRef.current();
+    });
+    const cleanupError = engineRef.current.onError(() => storeRef.current.dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ }));
+    const cleanupMeta = engineRef.current.onLoadedMetadata((duration) => {
+      storeRef.current.dispatch({ type: "DURATION_SET" /* DURATION_SET */, payload: duration });
+    });
+    return () => {
+      cleanupTime();
+      cleanupEnded();
+      cleanupError();
+      cleanupMeta();
+    };
+  }, []);
+};
+// src/app/hooks/useAppInit.ts
+var import_react5 = __toESM(require_react(), 1);
 
 // src/app/navigation/index.ts
 var navigate = (view, replace = false) => {
@@ -17795,7 +18008,217 @@ var bindPopState = (dispatch) => {
   };
 };
 
-// src/app/components/TreePanel.tsx
+// src/app/hooks/useAppInit.ts
+var useAppInit = (triggerScan) => {
+  const store = useStore();
+  const rpc = useRPC();
+  const engine = useEngine();
+  const storeRef = import_react5.useRef(store);
+  storeRef.current = store;
+  const engineRef = import_react5.useRef(engine);
+  engineRef.current = engine;
+  import_react5.useEffect(() => bindPopState(storeRef.current.dispatch), []);
+  import_react5.useEffect(() => {
+    const handler = (e) => {
+      const tracks = e.detail;
+      storeRef.current.dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: tracks });
+    };
+    document.addEventListener("__mock_library_updated", handler);
+    return () => {
+      document.removeEventListener("__mock_library_updated", handler);
+    };
+  }, []);
+  import_react5.useEffect(() => {
+    const view = getCurrentViewFromURL();
+    navigate(view, true);
+    storeRef.current.dispatch({ type: "VIEW_CHANGED" /* VIEW_CHANGED */, payload: view });
+    const init = async () => {
+      try {
+        const [port, settings] = await Promise.all([
+          rpc.request.getAudioPort(),
+          rpc.request.getSettings()
+        ]);
+        storeRef.current.dispatch({ type: "AUDIO_PORT_SET" /* AUDIO_PORT_SET */, payload: port });
+        storeRef.current.dispatch({ type: "SETTINGS_UPDATED" /* SETTINGS_UPDATED */, payload: settings });
+        if (settings.theme) {
+          storeRef.current.dispatch({ type: "THEME_CHANGED" /* THEME_CHANGED */, payload: settings.theme });
+          document.documentElement.dataset.theme = settings.theme;
+        }
+        const volume = settings.volume ?? 1;
+        storeRef.current.dispatch({ type: "VOLUME_CHANGED" /* VOLUME_CHANGED */, payload: volume });
+        engineRef.current.setVolume(volume);
+        if (settings.folders.length > 0) {
+          storeRef.current.dispatch({ type: "LIBRARY_LOADING" /* LIBRARY_LOADING */ });
+          const tracks = await rpc.request.scanLibrary({ folders: settings.folders });
+          storeRef.current.dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: tracks });
+        } else {
+          storeRef.current.dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
+        }
+      } catch (err) {
+        console.error("[aueio] init error:", err);
+        storeRef.current.dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
+      }
+    };
+    init().catch(console.error);
+  }, [rpc]);
+};
+// src/app/hooks/useThemeSync.ts
+var import_react6 = __toESM(require_react(), 1);
+
+// src/app/selectors/index.ts
+var selectActiveView = (s) => s.activeView;
+var selectIsPlaying = (s) => s.isPlaying;
+var selectCurrentTrackIndex = (s) => s.currentTrackIndex;
+var selectCurrentTime = (s) => s.currentTime;
+var selectDuration = (s) => s.duration;
+var selectVolume = (s) => s.volume;
+var selectIsNowPlayingExpanded = (s) => s.isNowPlayingExpanded;
+var selectSearchQuery = (s) => s.searchQuery;
+var selectIsLoading = (s) => s.isLoading;
+var selectSortKey = (s) => s.sortKey;
+var selectSortDir = (s) => s.sortDir;
+var selectTheme = (s) => s.theme;
+var selectTagEditingIndex = (s) => s.tagEditingIndex;
+var selectTreeExpanded = (s) => s.treeExpanded;
+var selectTreeGroupBy = (s) => s.treeGroupBy;
+var selectTreeSelectedNode = (s) => s.treeSelectedNode;
+var selectTracks = (s) => s.tracks;
+var selectFilteredTracks = (s) => s.filteredTracks;
+var selectWaveformData = (s) => s.waveformData;
+var selectSettings = (s) => s.settings;
+var selectCurrentTrack = (s) => s.currentTrackIndex >= 0 ? s.filteredTracks[s.currentTrackIndex] ?? null : null;
+var selectProgress = (s) => s.duration > 0 ? s.currentTime / s.duration : 0;
+
+// src/app/hooks/useThemeSync.ts
+var useThemeSync = () => {
+  const theme = useSelector(selectTheme);
+  import_react6.useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+};
+// src/app/hooks/useNavigation.ts
+var import_react7 = __toESM(require_react(), 1);
+var useNavigation = () => {
+  const dispatch = useDispatch();
+  const handleNav = import_react7.useCallback((view) => {
+    dispatch({ type: "VIEW_CHANGED" /* VIEW_CHANGED */, payload: view });
+    navigate(view);
+  }, [dispatch]);
+  return { handleNav };
+};
+// src/app/hooks/useLibraryActions.ts
+var import_react8 = __toESM(require_react(), 1);
+var useLibraryActions = () => {
+  const store = useStore();
+  const rpc = useRPC();
+  const storeRef = import_react8.useRef(store);
+  storeRef.current = store;
+  const triggerScan = import_react8.useCallback(async () => {
+    const { settings } = storeRef.current.getState();
+    if (!settings.folders.length) {
+      storeRef.current.dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
+      return;
+    }
+    storeRef.current.dispatch({ type: "LIBRARY_LOADING" /* LIBRARY_LOADING */ });
+    try {
+      const tracks = await rpc.request.scanLibrary({ folders: settings.folders });
+      storeRef.current.dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: tracks });
+    } catch {
+      storeRef.current.dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
+    }
+  }, [rpc]);
+  const handleSaveTag = import_react8.useCallback((idx, track, tags) => {
+    storeRef.current.dispatch({ type: "TRACK_TAGS_UPDATED" /* TRACK_TAGS_UPDATED */, payload: { id: track.id, tags } });
+    rpc.request.saveTrackTags({ id: track.id, tags }).catch(console.error);
+  }, [rpc]);
+  const handleSaveRating = import_react8.useCallback((idx, track, rating) => {
+    storeRef.current.dispatch({ type: "TRACK_TAGS_UPDATED" /* TRACK_TAGS_UPDATED */, payload: { id: track.id, tags: { rating } } });
+    rpc.request.saveTrackTags({ id: track.id, tags: { rating } }).catch(console.error);
+  }, [rpc]);
+  const handleTagDialogSave = import_react8.useCallback((idx, tags) => {
+    const track = storeRef.current.getState().filteredTracks[idx];
+    if (!track)
+      return;
+    storeRef.current.dispatch({ type: "TRACK_TAGS_UPDATED" /* TRACK_TAGS_UPDATED */, payload: { id: track.id, tags } });
+    rpc.request.saveTrackTags({ id: track.id, tags }).catch(console.error);
+  }, [rpc]);
+  return { triggerScan, handleSaveTag, handleSaveRating, handleTagDialogSave };
+};
+// src/app/hooks/useSettingsActions.ts
+var import_react9 = __toESM(require_react(), 1);
+var useSettingsActions = (onTriggerScan) => {
+  const store = useStore();
+  const rpc = useRPC();
+  const engine = useEngine();
+  const settings = useSelector(selectSettings);
+  const addFolder = import_react9.useCallback(async () => {
+    const picked = await rpc.request.pickFolder();
+    if (!picked)
+      return;
+    if (settings.folders.includes(picked))
+      return;
+    const updated = { ...settings, folders: [...settings.folders, picked] };
+    await rpc.request.saveSettings(updated);
+    store.dispatch({ type: "SETTINGS_UPDATED" /* SETTINGS_UPDATED */, payload: updated });
+    await onTriggerScan();
+  }, [settings, rpc, store, onTriggerScan]);
+  const removeFolder = import_react9.useCallback(async (idx) => {
+    const updated = {
+      ...settings,
+      folders: settings.folders.filter((_, i) => i !== idx)
+    };
+    await rpc.request.saveSettings(updated);
+    store.dispatch({ type: "SETTINGS_UPDATED" /* SETTINGS_UPDATED */, payload: updated });
+    await onTriggerScan();
+  }, [settings, rpc, store, onTriggerScan]);
+  const handleVolumeChange = import_react9.useCallback((e) => {
+    const vol = Number.parseFloat(e.target.value);
+    engine.setVolume(vol);
+    store.dispatch({ type: "VOLUME_CHANGED" /* VOLUME_CHANGED */, payload: vol });
+  }, [engine, store]);
+  const handleThemeChange = import_react9.useCallback((e) => {
+    const theme = e.target.value;
+    store.dispatch({ type: "THEME_CHANGED" /* THEME_CHANGED */, payload: theme });
+    rpc.request.saveSettings({ ...settings, theme }).catch(console.error);
+  }, [settings, store, rpc]);
+  return { addFolder, removeFolder, handleVolumeChange, handleThemeChange };
+};
+// src/app/components/composite/Topbar.tsx
+var import_react10 = __toESM(require_react(), 1);
+var jsx_dev_runtime = __toESM(require_jsx_dev_runtime(), 1);
+var Topbar = import_react10.memo(() => {
+  const activeView = useSelector(selectActiveView);
+  const { handleNav } = useNavigation();
+  return /* @__PURE__ */ jsx_dev_runtime.jsxDEV("header", {
+    id: "topbar",
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime.jsxDEV("span", {
+        id: "app-title",
+        children: "Aüeio"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime.jsxDEV("button", {
+        id: "nav-library",
+        "data-nav": "library",
+        className: activeView === "library" ? "active" : "",
+        onClick: () => handleNav("library"),
+        children: "Library"
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime.jsxDEV("button", {
+        id: "nav-settings",
+        "data-nav": "settings",
+        className: activeView === "settings" ? "active" : "",
+        onClick: () => handleNav("settings"),
+        children: "Settings"
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
+});
+
+// src/app/components/view/LibraryView.tsx
+var import_react16 = __toESM(require_react(), 1);
+
+// src/app/components/composite/TreePanel.tsx
+var import_react11 = __toESM(require_react(), 1);
 var jsx_dev_runtime2 = __toESM(require_jsx_dev_runtime(), 1);
 var getFolderName2 = (path) => {
   const parts = path.replace(/\\/g, "/").split("/");
@@ -17822,8 +18245,8 @@ var buildNodes = (tracks, groupBy) => {
   }
   return [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([label, count]) => ({ label, count, key: label }));
 };
-var TreePanel = ({ tracks, groupBy, selectedNode, expanded, onToggle, onNodeSelect, onGroupChange }) => {
-  const nodes = buildNodes(tracks, groupBy);
+var TreePanel = import_react11.memo(({ tracks, groupBy, selectedNode, expanded, onToggle, onNodeSelect, onGroupChange }) => {
+  const nodes = import_react11.useMemo(() => buildNodes(tracks, groupBy), [tracks, groupBy]);
   const titleText = groupBy === "folder" ? "Folders" : groupBy === "artist" ? "Artists" : "Albums";
   return /* @__PURE__ */ jsx_dev_runtime2.jsxDEV("div", {
     id: "library-tree",
@@ -17938,9 +18361,10 @@ var TreePanel = ({ tracks, groupBy, selectedNode, expanded, onToggle, onNodeSele
       }, undefined, true, undefined, this)
     ]
   }, undefined, true, undefined, this);
-};
+});
 
-// src/app/components/SortHeader.tsx
+// src/app/components/atomic/SortHeader.tsx
+var import_react12 = __toESM(require_react(), 1);
 var jsx_dev_runtime3 = __toESM(require_jsx_dev_runtime(), 1);
 var COLUMNS = [
   { key: "", label: "#", cls: "tr-num" },
@@ -17955,7 +18379,7 @@ var COLUMNS = [
   { key: "rating", label: "Rating", cls: "tr-rating" },
   { key: "", label: "", cls: "tr-edit-btn" }
 ];
-var SortHeader = ({ sortKey, sortDir, onSort }) => {
+var SortHeader = import_react12.memo(({ sortKey, sortDir, onSort }) => {
   const handleClick = (key) => {
     const dir = key === sortKey && sortDir === "asc" ? "desc" : "asc";
     onSort(key, dir);
@@ -17988,7 +18412,10 @@ var SortHeader = ({ sortKey, sortDir, onSort }) => {
       }, i, true, undefined, this);
     })
   }, undefined, false, undefined, this);
-};
+});
+
+// src/app/components/composite/TrackRow.tsx
+var import_react15 = __toESM(require_react(), 1);
 
 // src/app/utils/dom.ts
 var formatTime = (secs) => {
@@ -17999,26 +18426,10 @@ var formatTime = (secs) => {
   return `${m}:${s.toString().padStart(2, "0")}`;
 };
 
-// src/app/utils/audio.ts
-var buildAudioUrl = (path, port) => `http://localhost:${port}/audio?p=${encodeURIComponent(path)}`;
-var getTrackEmoji = (track) => {
-  const ext = track.path.split(".").pop()?.toLowerCase() ?? "";
-  const emojiMap = {
-    mp3: "\uD83C\uDFB5",
-    flac: "\uD83C\uDFBC",
-    wav: "\uD83D\uDD0A",
-    m4a: "\uD83C\uDFB6",
-    ogg: "\uD83C\uDFB5",
-    aac: "\uD83C\uDFB5",
-    opus: "\uD83C\uDFB5",
-    wma: "\uD83C\uDFB5"
-  };
-  return emojiMap[ext] ?? "\uD83C\uDFB5";
-};
-
-// src/app/components/PlayingBars.tsx
+// src/app/components/atomic/PlayingBars.tsx
+var import_react13 = __toESM(require_react(), 1);
 var jsx_dev_runtime4 = __toESM(require_jsx_dev_runtime(), 1);
-var PlayingBars = ({ paused }) => /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
+var PlayingBars = import_react13.memo(({ paused }) => /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
   className: `playing-bars${paused ? " paused" : ""}`,
   children: [
     /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span", {
@@ -18031,11 +18442,12 @@ var PlayingBars = ({ paused }) => /* @__PURE__ */ jsx_dev_runtime4.jsxDEV("span"
       className: "playing-bar"
     }, undefined, false, undefined, this)
   ]
-}, undefined, true, undefined, this);
+}, undefined, true, undefined, this));
 
-// src/app/components/StarRating.tsx
+// src/app/components/atomic/StarRating.tsx
+var import_react14 = __toESM(require_react(), 1);
 var jsx_dev_runtime5 = __toESM(require_jsx_dev_runtime(), 1);
-var StarRating = ({ value, readOnly, onChange }) => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("span", {
+var StarRating = import_react14.memo(({ value, readOnly, onChange }) => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("span", {
   role: readOnly ? "img" : "group",
   "aria-label": `Rating: ${value} of 5`,
   children: [1, 2, 3, 4, 5].map((i) => /* @__PURE__ */ jsx_dev_runtime5.jsxDEV("button", {
@@ -18049,11 +18461,11 @@ var StarRating = ({ value, readOnly, onChange }) => /* @__PURE__ */ jsx_dev_runt
     },
     children: i <= value ? "★" : "☆"
   }, i, false, undefined, this))
-}, undefined, false, undefined, this);
+}, undefined, false, undefined, this));
 
-// src/app/components/TrackRow.tsx
+// src/app/components/composite/TrackRow.tsx
 var jsx_dev_runtime6 = __toESM(require_jsx_dev_runtime(), 1);
-var TrackRow = ({ track, index, isCurrent, isPlaying, onPlay, onEdit, onRating }) => {
+var TrackRow = import_react15.memo(({ track, index, isCurrent, isPlaying, onPlay, onEdit, onRating }) => {
   const color = track.coverColor ?? "hsl(220,60%,40%)";
   const emoji = getTrackEmoji(track);
   const handleRowClick = (e) => {
@@ -18177,17 +18589,52 @@ var TrackRow = ({ track, index, isCurrent, isPlaying, onPlay, onEdit, onRating }
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
-};
+});
 
-// src/app/components/LibraryView.tsx
+// src/app/components/view/LibraryView.tsx
 var jsx_dev_runtime7 = __toESM(require_jsx_dev_runtime(), 1);
-var LibraryView = ({ state, dispatch, onPlayTrack, onSaveTag, onSaveRating }) => {
-  const isActive = state.activeView === "library";
-  const { filteredTracks, currentTrackIndex, isPlaying, isLoading } = state;
+var LibraryView = import_react16.memo(({ onPlayTrack, onSaveTag, onSaveRating }) => {
+  const dispatch = useDispatch();
+  const isActive = useSelector(selectActiveView) === "library";
+  const filteredTracks = useSelector(selectFilteredTracks);
+  const currentTrackIndex = useSelector(selectCurrentTrackIndex);
+  const isPlaying = useSelector(selectIsPlaying);
+  const isLoading = useSelector(selectIsLoading);
+  const searchQuery = useSelector(selectSearchQuery);
+  const sortKey = useSelector(selectSortKey);
+  const sortDir = useSelector(selectSortDir);
+  const tracks = useSelector(selectTracks);
+  const treeGroupBy = useSelector(selectTreeGroupBy);
+  const treeSelectedNode = useSelector(selectTreeSelectedNode);
+  const treeExpanded = useSelector(selectTreeExpanded);
   const count = filteredTracks.length;
-  const handleEdit = (idx, track, focusField) => {
+  const handleEdit = import_react16.useCallback((idx, track, focusField) => {
     dispatch({ type: "TAG_EDIT_OPENED" /* TAG_EDIT_OPENED */, payload: idx });
-  };
+  }, [dispatch]);
+  const handleToggle = import_react16.useCallback(() => {
+    dispatch({ type: "TREE_TOGGLED" /* TREE_TOGGLED */ });
+  }, [dispatch]);
+  const handleNodeSelect = import_react16.useCallback((key) => {
+    dispatch({ type: "TREE_NODE_SELECTED" /* TREE_NODE_SELECTED */, payload: key });
+  }, [dispatch]);
+  const handleGroupChange = import_react16.useCallback((groupBy) => {
+    dispatch({ type: "TREE_GROUP_CHANGED" /* TREE_GROUP_CHANGED */, payload: groupBy });
+  }, [dispatch]);
+  const handleSearchChange = import_react16.useCallback((e) => {
+    dispatch({ type: "SEARCH_CHANGED" /* SEARCH_CHANGED */, payload: e.target.value });
+  }, [dispatch]);
+  const handleSort = import_react16.useCallback((key, dir) => {
+    dispatch({ type: "SORT_CHANGED" /* SORT_CHANGED */, payload: { key, dir } });
+  }, [dispatch]);
+  const handleGoToSettings = import_react16.useCallback(() => {
+    dispatch({ type: "VIEW_CHANGED" /* VIEW_CHANGED */, payload: "settings" });
+    navigate("settings");
+  }, [dispatch]);
+  const handleRating = import_react16.useCallback((i, rating) => {
+    const tr = filteredTracks[i];
+    if (tr)
+      onSaveRating(i, tr, rating);
+  }, [filteredTracks, onSaveRating]);
   return /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("section", {
     id: "library-view",
     "data-view": "library",
@@ -18201,8 +18648,8 @@ var LibraryView = ({ state, dispatch, onPlayTrack, onSaveTag, onSaveRating }) =>
             type: "search",
             placeholder: "Search tracks…",
             "aria-label": "Search tracks",
-            value: state.searchQuery,
-            onChange: (e) => dispatch({ type: "SEARCH_CHANGED" /* SEARCH_CHANGED */, payload: e.target.value })
+            value: searchQuery,
+            onChange: handleSearchChange
           }, undefined, false, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("span", {
             id: "track-count",
@@ -18214,13 +18661,13 @@ var LibraryView = ({ state, dispatch, onPlayTrack, onSaveTag, onSaveRating }) =>
         id: "library-body",
         children: [
           /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(TreePanel, {
-            tracks: state.tracks,
-            groupBy: state.treeGroupBy,
-            selectedNode: state.treeSelectedNode,
-            expanded: state.treeExpanded,
-            onToggle: () => dispatch({ type: "TREE_TOGGLED" /* TREE_TOGGLED */ }),
-            onNodeSelect: (key) => dispatch({ type: "TREE_NODE_SELECTED" /* TREE_NODE_SELECTED */, payload: key }),
-            onGroupChange: (groupBy) => dispatch({ type: "TREE_GROUP_CHANGED" /* TREE_GROUP_CHANGED */, payload: groupBy })
+            tracks,
+            groupBy: treeGroupBy,
+            selectedNode: treeSelectedNode,
+            expanded: treeExpanded,
+            onToggle: handleToggle,
+            onNodeSelect: handleNodeSelect,
+            onGroupChange: handleGroupChange
           }, undefined, false, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("div", {
             id: "library-table-wrapper",
@@ -18259,18 +18706,15 @@ var LibraryView = ({ state, dispatch, onPlayTrack, onSaveTag, onSaveRating }) =>
                     id: "empty-goto-settings",
                     "data-variant": "primary",
                     "data-size": "sm",
-                    onClick: () => {
-                      dispatch({ type: "VIEW_CHANGED" /* VIEW_CHANGED */, payload: "settings" });
-                      navigate("settings");
-                    },
+                    onClick: handleGoToSettings,
                     children: "Open Settings"
                   }, undefined, false, undefined, this)
                 ]
               }, undefined, true, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime7.jsxDEV(SortHeader, {
-                sortKey: state.sortKey,
-                sortDir: state.sortDir,
-                onSort: (key, dir) => dispatch({ type: "SORT_CHANGED" /* SORT_CHANGED */, payload: { key, dir } })
+                sortKey,
+                sortDir,
+                onSort: handleSort
               }, undefined, false, undefined, this),
               /* @__PURE__ */ jsx_dev_runtime7.jsxDEV("div", {
                 id: "track-list",
@@ -18284,11 +18728,7 @@ var LibraryView = ({ state, dispatch, onPlayTrack, onSaveTag, onSaveRating }) =>
                   isPlaying: idx === currentTrackIndex && isPlaying,
                   onPlay: onPlayTrack,
                   onEdit: handleEdit,
-                  onRating: (i, rating) => {
-                    const tr = filteredTracks[i];
-                    if (tr)
-                      onSaveRating(i, tr, rating);
-                  }
+                  onRating: handleRating
                 }, track.id, false, undefined, this))
               }, undefined, false, undefined, this)
             ]
@@ -18297,11 +18737,15 @@ var LibraryView = ({ state, dispatch, onPlayTrack, onSaveTag, onSaveRating }) =>
       }, undefined, true, undefined, this)
     ]
   }, undefined, true, undefined, this);
-};
+});
 
-// src/app/components/FolderItem.tsx
+// src/app/components/view/SettingsView.tsx
+var import_react18 = __toESM(require_react(), 1);
+
+// src/app/components/atomic/FolderItem.tsx
+var import_react17 = __toESM(require_react(), 1);
 var jsx_dev_runtime8 = __toESM(require_jsx_dev_runtime(), 1);
-var FolderItem = ({ folder, index, onRemove }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
+var FolderItem = import_react17.memo(({ folder, index, onRemove }) => /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("div", {
   className: "folder-item",
   children: [
     /* @__PURE__ */ jsx_dev_runtime8.jsxDEV("span", {
@@ -18321,32 +18765,16 @@ var FolderItem = ({ folder, index, onRemove }) => /* @__PURE__ */ jsx_dev_runtim
       children: "×"
     }, undefined, false, undefined, this)
   ]
-}, undefined, true, undefined, this);
+}, undefined, true, undefined, this));
 
-// src/app/components/SettingsView.tsx
+// src/app/components/view/SettingsView.tsx
 var jsx_dev_runtime9 = __toESM(require_jsx_dev_runtime(), 1);
-var SettingsView = ({ state, dispatch, rpc, engine, onTriggerScan }) => {
-  const isActive = state.activeView === "settings";
-  const removeFolder = async (idx) => {
-    const updated = {
-      ...state.settings,
-      folders: state.settings.folders.filter((_, i) => i !== idx)
-    };
-    await rpc.request.saveSettings(updated);
-    dispatch({ type: "SETTINGS_UPDATED" /* SETTINGS_UPDATED */, payload: updated });
-    await onTriggerScan();
-  };
-  const addFolder = async () => {
-    const picked = await rpc.request.pickFolder();
-    if (!picked)
-      return;
-    if (state.settings.folders.includes(picked))
-      return;
-    const updated = { ...state.settings, folders: [...state.settings.folders, picked] };
-    await rpc.request.saveSettings(updated);
-    dispatch({ type: "SETTINGS_UPDATED" /* SETTINGS_UPDATED */, payload: updated });
-    await onTriggerScan();
-  };
+var SettingsView = import_react18.memo(({ onTriggerScan }) => {
+  const isActive = useSelector(selectActiveView) === "settings";
+  const settings = useSelector(selectSettings);
+  const volume = useSelector(selectVolume);
+  const theme = useSelector(selectTheme);
+  const { addFolder, removeFolder, handleVolumeChange, handleThemeChange } = useSettingsActions(onTriggerScan);
   return /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("section", {
     id: "settings-view",
     "data-view": "settings",
@@ -18364,10 +18792,10 @@ var SettingsView = ({ state, dispatch, rpc, engine, onTriggerScan }) => {
             /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("div", {
               id: "folder-list",
               "data-stack": "sm",
-              children: state.settings.folders.length === 0 ? /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("p", {
+              children: settings.folders.length === 0 ? /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("p", {
                 style: { color: "var(--text-muted)", fontSize: "var(--text-sm)" },
                 children: "No folders added yet"
-              }, undefined, false, undefined, this) : state.settings.folders.map((folder, idx) => /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(FolderItem, {
+              }, undefined, false, undefined, this) : settings.folders.map((folder, idx) => /* @__PURE__ */ jsx_dev_runtime9.jsxDEV(FolderItem, {
                 folder,
                 index: idx,
                 onRemove: (i) => removeFolder(i).catch(console.error)
@@ -18402,13 +18830,9 @@ var SettingsView = ({ state, dispatch, rpc, engine, onTriggerScan }) => {
                   min: 0,
                   max: 1,
                   step: 0.05,
-                  value: state.volume,
+                  value: volume,
                   "aria-label": "Default volume",
-                  onChange: (e) => {
-                    const vol = Number.parseFloat(e.target.value);
-                    engine.setVolume(vol);
-                    dispatch({ type: "VOLUME_CHANGED" /* VOLUME_CHANGED */, payload: vol });
-                  }
+                  onChange: handleVolumeChange
                 }, undefined, false, undefined, this)
               ]
             }, undefined, true, undefined, this)
@@ -18431,12 +18855,8 @@ var SettingsView = ({ state, dispatch, rpc, engine, onTriggerScan }) => {
                 /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("select", {
                   id: "settings-theme",
                   "aria-label": "Select theme",
-                  value: state.theme,
-                  onChange: (e) => {
-                    const theme = e.target.value;
-                    dispatch({ type: "THEME_CHANGED" /* THEME_CHANGED */, payload: theme });
-                    rpc.request.saveSettings({ ...state.settings, theme }).catch(console.error);
-                  },
+                  value: theme,
+                  onChange: handleThemeChange,
                   children: [
                     /* @__PURE__ */ jsx_dev_runtime9.jsxDEV("option", {
                       value: "dark",
@@ -18463,91 +18883,42 @@ var SettingsView = ({ state, dispatch, rpc, engine, onTriggerScan }) => {
       ]
     }, undefined, true, undefined, this)
   }, undefined, false, undefined, this);
-};
+});
 
-// src/app/components/NowPlayingView.tsx
-var import_react2 = __toESM(require_react(), 1);
-
-// src/app/audio/waveform.ts
-var WAVEFORM_SAMPLES = 200;
-var loadWaveformData = async (url, ctx) => {
-  const resp = await fetch(url);
-  const arrayBuf = await resp.arrayBuffer();
-  const audioBuf = await ctx.decodeAudioData(arrayBuf);
-  const channelData = audioBuf.getChannelData(0);
-  const blockSize = Math.floor(channelData.length / WAVEFORM_SAMPLES);
-  const waveform = new Float32Array(WAVEFORM_SAMPLES);
-  for (let i = 0;i < WAVEFORM_SAMPLES; i++) {
-    let sum = 0;
-    const start = i * blockSize;
-    for (let j = 0;j < blockSize; j++)
-      sum += Math.abs(channelData[start + j] ?? 0);
-    waveform[i] = sum / blockSize;
-  }
-  const max = Math.max(...Array.from(waveform), 0.001);
-  for (let i = 0;i < waveform.length; i++)
-    waveform[i] = (waveform[i] ?? 0) / max;
-  return waveform;
-};
-var drawWaveformToCanvas = (canvas, waveform, progress, showProgress) => {
-  const dpr = window.devicePixelRatio || 1;
-  const rect = canvas.getBoundingClientRect();
-  const w = rect.width || canvas.offsetWidth || 400;
-  const h = rect.height || canvas.offsetHeight || 80;
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  const ctx = canvas.getContext("2d");
-  if (!ctx)
-    return;
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, w, h);
-  const progressX = progress * w;
-  const barW = w / waveform.length;
-  const gap = Math.max(1, barW * 0.15);
-  const barActual = barW - gap;
-  for (let i = 0;i < waveform.length; i++) {
-    const amp = waveform[i] ?? 0;
-    const barH = Math.max(2, amp * h * 0.85);
-    const x = i * barW;
-    const y = (h - barH) / 2;
-    const isPast = showProgress && x + barActual < progressX;
-    const isCurrent = showProgress && x <= progressX && x + barActual >= progressX;
-    if (isPast)
-      ctx.fillStyle = "#3a86ff";
-    else if (isCurrent)
-      ctx.fillStyle = "#ff5500";
-    else
-      ctx.fillStyle = showProgress ? "rgba(255,255,255,0.15)" : "rgba(58,134,255,0.4)";
-    ctx.beginPath();
-    ctx.roundRect(x, y, Math.max(1, barActual), barH, 1.5);
-    ctx.fill();
-  }
-};
-
-// src/app/components/NowPlayingView.tsx
+// src/app/components/view/NowPlayingView.tsx
+var import_react19 = __toESM(require_react(), 1);
 var jsx_dev_runtime10 = __toESM(require_jsx_dev_runtime(), 1);
-var NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev, onTogglePlayPause }) => {
-  const waveformRef = import_react2.useRef(null);
-  const track = state.currentTrackIndex >= 0 ? state.filteredTracks[state.currentTrackIndex] ?? null : null;
-  const playIcon = state.isPlaying ? "⏸" : "▶";
+var NowPlayingView = import_react19.memo(({ onPlayNext, onPlayPrev, onTogglePlayPause }) => {
+  const waveformRef = import_react19.useRef(null);
+  const dispatch = useDispatch();
+  const engine = useEngine();
+  const isExpanded = useSelector(selectIsNowPlayingExpanded);
+  const track = useSelector(selectCurrentTrack);
+  const isPlaying = useSelector(selectIsPlaying);
+  const currentTime = useSelector(selectCurrentTime);
+  const duration = useSelector(selectDuration);
+  const volume = useSelector(selectVolume);
+  const waveformData = useSelector(selectWaveformData);
+  const progress = useSelector(selectProgress);
+  const { seek } = usePlayback();
+  const playIcon = isPlaying ? "⏸" : "▶";
   const color = track?.coverColor ?? "hsl(220,60%,40%)";
-  const progress = state.duration > 0 ? state.currentTime / state.duration : 0;
-  import_react2.useEffect(() => {
+  import_react19.useEffect(() => {
     const canvas = waveformRef.current;
-    if (!canvas || !state.waveformData)
+    if (!canvas || !waveformData)
       return;
-    drawWaveformToCanvas(canvas, state.waveformData, progress, true);
-  }, [state.waveformData, state.currentTime, state.duration, progress]);
-  const handleSeek = (e) => {
+    drawWaveformToCanvas(canvas, waveformData, progress, true);
+  }, [waveformData, progress]);
+  const handleSeek = import_react19.useCallback((e) => {
     const canvas = waveformRef.current;
     if (!canvas)
       return;
     const rect = canvas.getBoundingClientRect();
     const ratio = (e.clientX - rect.left) / rect.width;
-    const newTime = ratio * state.duration;
+    const newTime = ratio * duration;
     engine.seek(newTime);
     dispatch({ type: "TIME_UPDATED" /* TIME_UPDATED */, payload: { currentTime: newTime, duration: engine.duration } });
-  };
+  }, [engine, dispatch, duration]);
   const tagItems = track ? [
     { label: "Album", value: track.album },
     { label: "Artist", value: track.artist },
@@ -18560,7 +18931,7 @@ var NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev, onToggl
   ].filter((t) => t.value !== undefined && t.value !== "") : [];
   return /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("section", {
     id: "now-playing-view",
-    className: state.isNowPlayingExpanded ? "active" : "",
+    className: isExpanded ? "active" : "",
     role: "region",
     "aria-label": "Now Playing",
     children: [
@@ -18589,7 +18960,7 @@ var NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev, onToggl
           /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("div", {
             id: "np-album-art",
             "aria-hidden": "true",
-            className: state.isPlaying ? "playing" : "",
+            className: isPlaying ? "playing" : "",
             style: { background: color },
             children: /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
               id: "np-album-art-title",
@@ -18651,11 +19022,11 @@ var NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev, onToggl
                 children: [
                   /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
                     id: "np-current-time",
-                    children: formatTime(state.currentTime)
+                    children: formatTime(currentTime)
                   }, undefined, false, undefined, this),
                   /* @__PURE__ */ jsx_dev_runtime10.jsxDEV("span", {
                     id: "np-duration",
-                    children: formatTime(state.duration)
+                    children: formatTime(duration)
                   }, undefined, false, undefined, this)
                 ]
               }, undefined, true, undefined, this)
@@ -18701,7 +19072,7 @@ var NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev, onToggl
                 min: 0,
                 max: 1,
                 step: 0.01,
-                value: state.volume,
+                value: volume,
                 "aria-label": "Volume",
                 onChange: (e) => {
                   const vol = Number.parseFloat(e.target.value);
@@ -18720,46 +19091,56 @@ var NowPlayingView = ({ state, dispatch, engine, onPlayNext, onPlayPrev, onToggl
       }, undefined, true, undefined, this)
     ]
   }, undefined, true, undefined, this);
-};
+});
 
-// src/app/components/NowPlayingBar.tsx
-var import_react3 = __toESM(require_react(), 1);
+// src/app/components/composite/NowPlayingBar.tsx
+var import_react20 = __toESM(require_react(), 1);
 var jsx_dev_runtime11 = __toESM(require_jsx_dev_runtime(), 1);
-var NowPlayingBar = ({
-  state,
-  dispatch,
-  engine,
-  currentTrack,
-  onPlayNext,
-  onPlayPrev,
-  onTogglePlayPause
-}) => {
-  const waveformRef = import_react3.useRef(null);
-  const playIcon = state.isPlaying ? "⏸" : "▶";
+var NowPlayingBar = import_react20.memo(({ onPlayNext, onPlayPrev, onTogglePlayPause }) => {
+  const waveformRef = import_react20.useRef(null);
+  const dispatch = useDispatch();
+  const engine = useEngine();
+  const isPlaying = useSelector(selectIsPlaying);
+  const duration = useSelector(selectDuration);
+  const waveformData = useSelector(selectWaveformData);
+  const currentTrack = useSelector(selectCurrentTrack);
+  const progress = useSelector(selectProgress);
+  const playIcon = isPlaying ? "⏸" : "▶";
   const color = currentTrack?.coverColor ?? "hsl(220,60%,40%)";
-  const progress = state.duration > 0 ? state.currentTime / state.duration : 0;
-  import_react3.useEffect(() => {
+  import_react20.useEffect(() => {
     const canvas = waveformRef.current;
-    if (!canvas || !state.waveformData || !currentTrack)
+    if (!canvas || !waveformData || !currentTrack)
       return;
-    drawWaveformToCanvas(canvas, state.waveformData, progress, false);
-  }, [state.waveformData, state.currentTime, state.duration, currentTrack, progress]);
-  const handleExpand = (e) => {
+    drawWaveformToCanvas(canvas, waveformData, progress, false);
+  }, [waveformData, progress, currentTrack]);
+  const handleExpand = import_react20.useCallback((e) => {
     e.stopPropagation();
     dispatch({ type: "NOW_PLAYING_EXPANDED" /* NOW_PLAYING_EXPANDED */ });
     navigateNowPlaying(true);
-  };
-  const handleSeek = (e) => {
+  }, [dispatch]);
+  const handleSeek = import_react20.useCallback((e) => {
     e.stopPropagation();
     const canvas = waveformRef.current;
     if (!canvas)
       return;
     const rect = canvas.getBoundingClientRect();
     const ratio = (e.clientX - rect.left) / rect.width;
-    const newTime = ratio * state.duration;
+    const newTime = ratio * duration;
     engine.seek(newTime);
     dispatch({ type: "TIME_UPDATED" /* TIME_UPDATED */, payload: { currentTime: newTime, duration: engine.duration } });
-  };
+  }, [engine, dispatch, duration]);
+  const handlePrevClick = import_react20.useCallback((e) => {
+    e.stopPropagation();
+    onPlayPrev();
+  }, [onPlayPrev]);
+  const handlePlayClick = import_react20.useCallback((e) => {
+    e.stopPropagation();
+    onTogglePlayPause();
+  }, [onTogglePlayPause]);
+  const handleNextClick = import_react20.useCallback((e) => {
+    e.stopPropagation();
+    onPlayNext();
+  }, [onPlayNext]);
   return /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("footer", {
     id: "now-playing-bar",
     hidden: !currentTrack,
@@ -18805,30 +19186,21 @@ var NowPlayingBar = ({
             id: "np-bar-prev-btn",
             "data-icon": true,
             "aria-label": "Previous",
-            onClick: (e) => {
-              e.stopPropagation();
-              onPlayPrev();
-            },
+            onClick: handlePrevClick,
             children: "⏮"
           }, undefined, false, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("button", {
             id: "np-bar-play-btn",
             "data-icon": true,
             "aria-label": "Play / Pause",
-            onClick: (e) => {
-              e.stopPropagation();
-              onTogglePlayPause();
-            },
+            onClick: handlePlayClick,
             children: playIcon
           }, undefined, false, undefined, this),
           /* @__PURE__ */ jsx_dev_runtime11.jsxDEV("button", {
             id: "np-bar-next-btn",
             "data-icon": true,
             "aria-label": "Next",
-            onClick: (e) => {
-              e.stopPropagation();
-              onPlayNext();
-            },
+            onClick: handleNextClick,
             children: "⏭"
           }, undefined, false, undefined, this)
         ]
@@ -18842,10 +19214,10 @@ var NowPlayingBar = ({
       }, undefined, false, undefined, this)
     ]
   }, undefined, true, undefined, this);
-};
+});
 
-// src/app/components/TagDialog.tsx
-var import_react4 = __toESM(require_react(), 1);
+// src/app/components/composite/TagDialog.tsx
+var import_react21 = __toESM(require_react(), 1);
 var jsx_dev_runtime12 = __toESM(require_jsx_dev_runtime(), 1);
 var FIELDS = [
   { key: "title", label: "Title", type: "text", editable: true },
@@ -18859,25 +19231,28 @@ var FIELDS = [
   { key: "duration", label: "Duration (s)", type: "number", editable: false },
   { key: "path", label: "File Path", type: "text", editable: false }
 ];
-var TagDialog = ({ state, dispatch, onSave }) => {
-  const dialogRef = import_react4.useRef(null);
-  const track = state.tagEditingIndex === null ? null : state.filteredTracks[state.tagEditingIndex] ?? null;
-  import_react4.useEffect(() => {
+var TagDialog = import_react21.memo(({ onSave }) => {
+  const dialogRef = import_react21.useRef(null);
+  const dispatch = useDispatch();
+  const tagEditingIndex = useSelector(selectTagEditingIndex);
+  const filteredTracks = useSelector(selectFilteredTracks);
+  const track = tagEditingIndex === null ? null : filteredTracks[tagEditingIndex] ?? null;
+  import_react21.useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog)
       return;
-    if (state.tagEditingIndex !== null && !dialog.open) {
+    if (tagEditingIndex !== null && !dialog.open) {
       dialog.showModal();
-    } else if (state.tagEditingIndex === null && dialog.open) {
+    } else if (tagEditingIndex === null && dialog.open) {
       dialog.close();
     }
-  }, [state.tagEditingIndex]);
-  const handleClose = () => {
+  }, [tagEditingIndex]);
+  const handleClose = import_react21.useCallback(() => {
     dispatch({ type: "TAG_EDIT_CLOSED" /* TAG_EDIT_CLOSED */ });
-  };
-  const handleSave = (e) => {
+  }, [dispatch]);
+  const handleSave = import_react21.useCallback((e) => {
     e.preventDefault();
-    if (state.tagEditingIndex === null)
+    if (tagEditingIndex === null)
       return;
     const form = e.currentTarget;
     const tags = {};
@@ -18896,13 +19271,13 @@ var TagDialog = ({ state, dispatch, onSave }) => {
         tags[field] = val;
       }
     }
-    onSave(state.tagEditingIndex, tags);
+    onSave(tagEditingIndex, tags);
     dispatch({ type: "TAG_EDIT_CLOSED" /* TAG_EDIT_CLOSED */ });
-  };
-  const handleBackdropClick = (e) => {
+  }, [tagEditingIndex, onSave, dispatch]);
+  const handleBackdropClick = import_react21.useCallback((e) => {
     if (e.target === dialogRef.current)
       handleClose();
-  };
+  }, [handleClose]);
   return /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("div", {
     id: "library-tag-dialog",
     children: /* @__PURE__ */ jsx_dev_runtime12.jsxDEV("dialog", {
@@ -19021,251 +19396,62 @@ var TagDialog = ({ state, dispatch, onSave }) => {
               ]
             }, undefined, true, undefined, this)
           ]
-        }, state.tagEditingIndex ?? "none", true, undefined, this)
+        }, tagEditingIndex ?? "none", true, undefined, this)
       ]
     }, undefined, true, undefined, this)
   }, undefined, false, undefined, this);
-};
+});
 
-// src/app/components/App.tsx
+// src/app/components/view/App.tsx
 var jsx_dev_runtime13 = __toESM(require_jsx_dev_runtime(), 1);
-var App = ({ store, rpc, engine }) => {
-  const state = import_react5.useSyncExternalStore(store.subscribe, store.getState);
-  const { dispatch } = store;
-  const currentTrack = state.currentTrackIndex >= 0 ? state.filteredTracks[state.currentTrackIndex] ?? null : null;
-  const playCurrentTrack = import_react5.useCallback(async () => {
-    const { filteredTracks, currentTrackIndex, audioPort } = store.getState();
-    const track = filteredTracks[currentTrackIndex];
-    if (!track)
-      return;
-    const url = buildAudioUrl(track.path, audioPort);
-    try {
-      await engine.play(url);
-      dispatch({ type: "PLAYBACK_STARTED" /* PLAYBACK_STARTED */ });
-    } catch {
-      dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
-      return;
-    }
-    const ctx = engine.audioContext;
-    if (!ctx || !audioPort)
-      return;
-    try {
-      const waveform = await loadWaveformData(url, ctx);
-      dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: waveform });
-    } catch {
-      dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: new Float32Array(200).fill(0.3) });
-    }
-  }, [store, engine, dispatch]);
-  const playNext = import_react5.useCallback(() => {
-    const { filteredTracks, currentTrackIndex } = store.getState();
-    if (!filteredTracks.length)
-      return;
-    const next = (currentTrackIndex + 1) % filteredTracks.length;
-    dispatch({ type: "TRACK_SELECTED" /* TRACK_SELECTED */, payload: next });
-    playCurrentTrack().catch(console.error);
-  }, [store, dispatch, playCurrentTrack]);
-  const playPrev = import_react5.useCallback(() => {
-    const { filteredTracks, currentTrackIndex } = store.getState();
-    if (!filteredTracks.length)
-      return;
-    if (engine.currentTime > 3) {
-      engine.seek(0);
-      dispatch({ type: "TIME_UPDATED" /* TIME_UPDATED */, payload: { currentTime: 0, duration: engine.duration } });
-      return;
-    }
-    const prev = (currentTrackIndex - 1 + filteredTracks.length) % filteredTracks.length;
-    dispatch({ type: "TRACK_SELECTED" /* TRACK_SELECTED */, payload: prev });
-    playCurrentTrack().catch(console.error);
-  }, [store, engine, dispatch, playCurrentTrack]);
-  const togglePlayPause = import_react5.useCallback(() => {
-    const { isPlaying, currentTrackIndex, filteredTracks } = store.getState();
-    if (currentTrackIndex < 0 || !filteredTracks.length)
-      return;
-    if (isPlaying) {
-      engine.pause();
-      dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
-    } else {
-      engine.resume().then(() => dispatch({ type: "PLAYBACK_STARTED" /* PLAYBACK_STARTED */ })).catch(() => dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ }));
-    }
-  }, [store, engine, dispatch]);
-  const selectAndPlayTrack = import_react5.useCallback(async (idx) => {
-    const s = store.getState();
-    const track = s.filteredTracks[idx];
-    if (!track)
-      return;
-    if (idx === s.currentTrackIndex && s.isPlaying) {
-      engine.pause();
-      dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
-      return;
-    }
-    dispatch({ type: "TRACK_SELECTED" /* TRACK_SELECTED */, payload: idx });
-    const url = buildAudioUrl(track.path, s.audioPort);
-    try {
-      await engine.play(url);
-      dispatch({ type: "PLAYBACK_STARTED" /* PLAYBACK_STARTED */ });
-    } catch {
-      dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ });
-      return;
-    }
-    const ctx = engine.audioContext;
-    if (!ctx || !s.audioPort)
-      return;
-    try {
-      const waveform = await loadWaveformData(url, ctx);
-      dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: waveform });
-    } catch {
-      dispatch({ type: "WAVEFORM_LOADED" /* WAVEFORM_LOADED */, payload: new Float32Array(200).fill(0.3) });
-    }
-  }, [store, engine, dispatch]);
-  const triggerScan = import_react5.useCallback(async () => {
-    const { settings } = store.getState();
-    if (!settings.folders.length) {
-      dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
-      return;
-    }
-    dispatch({ type: "LIBRARY_LOADING" /* LIBRARY_LOADING */ });
-    try {
-      const tracks = await rpc.request.scanLibrary({ folders: settings.folders });
-      dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: tracks });
-    } catch {
-      dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
-    }
-  }, [store, rpc, dispatch]);
-  import_react5.useEffect(() => {
-    const cleanupTime = engine.onTimeUpdate((currentTime, duration) => {
-      dispatch({ type: "TIME_UPDATED" /* TIME_UPDATED */, payload: { currentTime, duration } });
-    });
-    const cleanupEnded = engine.onEnded(playNext);
-    const cleanupError = engine.onError(() => dispatch({ type: "PLAYBACK_PAUSED" /* PLAYBACK_PAUSED */ }));
-    const cleanupMeta = engine.onLoadedMetadata((duration) => {
-      dispatch({ type: "DURATION_SET" /* DURATION_SET */, payload: duration });
-    });
-    return () => {
-      cleanupTime();
-      cleanupEnded();
-      cleanupError();
-      cleanupMeta();
-    };
-  }, [engine, dispatch, playNext]);
-  import_react5.useEffect(() => bindPopState(dispatch), [dispatch]);
-  import_react5.useEffect(() => {
-    document.documentElement.dataset.theme = state.theme;
-  }, [state.theme]);
-  import_react5.useEffect(() => {
-    const handler = (e) => {
-      const tracks = e.detail;
-      dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: tracks });
-    };
-    document.addEventListener("__mock_library_updated", handler);
-    return () => {
-      document.removeEventListener("__mock_library_updated", handler);
-    };
-  }, [dispatch]);
-  import_react5.useEffect(() => {
-    const view = getCurrentViewFromURL();
-    navigate(view, true);
-    dispatch({ type: "VIEW_CHANGED" /* VIEW_CHANGED */, payload: view });
-    const init = async () => {
-      try {
-        const [port, settings] = await Promise.all([
-          rpc.request.getAudioPort(),
-          rpc.request.getSettings()
-        ]);
-        dispatch({ type: "AUDIO_PORT_SET" /* AUDIO_PORT_SET */, payload: port });
-        dispatch({ type: "SETTINGS_UPDATED" /* SETTINGS_UPDATED */, payload: settings });
-        if (settings.theme) {
-          dispatch({ type: "THEME_CHANGED" /* THEME_CHANGED */, payload: settings.theme });
-          document.documentElement.dataset.theme = settings.theme;
-        }
-        const volume = settings.volume ?? 1;
-        dispatch({ type: "VOLUME_CHANGED" /* VOLUME_CHANGED */, payload: volume });
-        engine.setVolume(volume);
-        if (settings.folders.length > 0) {
-          dispatch({ type: "LIBRARY_LOADING" /* LIBRARY_LOADING */ });
-          const tracks = await rpc.request.scanLibrary({ folders: settings.folders });
-          dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: tracks });
-        } else {
-          dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
-        }
-      } catch (err) {
-        console.error("[aueio] init error:", err);
-        dispatch({ type: "TRACKS_LOADED" /* TRACKS_LOADED */, payload: [] });
-      }
-    };
-    init().catch(console.error);
-  }, []);
-  return /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(StoreContext.Provider, {
-    value: store,
-    children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(RPCContext.Provider, {
-      value: rpc,
-      children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(EngineContext.Provider, {
-        value: engine,
+var AppInner = () => {
+  const { playNext, playPrev, togglePlayPause, selectAndPlay } = usePlayback();
+  const { triggerScan, handleSaveTag, handleSaveRating, handleTagDialogSave } = useLibraryActions();
+  useEngineEvents(playNext);
+  useAppInit(triggerScan);
+  useThemeSync();
+  return /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(jsx_dev_runtime13.Fragment, {
+    children: [
+      /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(Topbar, {}, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("main", {
+        id: "views",
         children: [
-          /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(Topbar, {
-            activeView: state.activeView,
-            onNav: (view) => {
-              dispatch({ type: "VIEW_CHANGED" /* VIEW_CHANGED */, payload: view });
-              navigate(view);
-            }
+          /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(LibraryView, {
+            onPlayTrack: selectAndPlay,
+            onSaveTag: handleSaveTag,
+            onSaveRating: handleSaveRating
           }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime13.jsxDEV("main", {
-            id: "views",
-            children: [
-              /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(LibraryView, {
-                state,
-                dispatch,
-                onPlayTrack: selectAndPlayTrack,
-                onSaveTag: (idx, track, tags) => {
-                  dispatch({ type: "TRACK_TAGS_UPDATED" /* TRACK_TAGS_UPDATED */, payload: { id: track.id, tags } });
-                  rpc.request.saveTrackTags({ id: track.id, tags }).catch(console.error);
-                },
-                onSaveRating: (idx, track, rating) => {
-                  dispatch({ type: "TRACK_TAGS_UPDATED" /* TRACK_TAGS_UPDATED */, payload: { id: track.id, tags: { rating } } });
-                  rpc.request.saveTrackTags({ id: track.id, tags: { rating } }).catch(console.error);
-                }
-              }, undefined, false, undefined, this),
-              /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(SettingsView, {
-                state,
-                dispatch,
-                rpc,
-                engine,
-                onTriggerScan: triggerScan
-              }, undefined, false, undefined, this)
-            ]
-          }, undefined, true, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(NowPlayingView, {
-            state,
-            dispatch,
-            engine,
-            onPlayNext: playNext,
-            onPlayPrev: playPrev,
-            onTogglePlayPause: togglePlayPause
-          }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(NowPlayingBar, {
-            state,
-            dispatch,
-            engine,
-            currentTrack,
-            onPlayNext: playNext,
-            onPlayPrev: playPrev,
-            onTogglePlayPause: togglePlayPause
-          }, undefined, false, undefined, this),
-          /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(TagDialog, {
-            state,
-            dispatch,
-            onSave: (idx, tags) => {
-              const track = store.getState().filteredTracks[idx];
-              if (!track)
-                return;
-              dispatch({ type: "TRACK_TAGS_UPDATED" /* TRACK_TAGS_UPDATED */, payload: { id: track.id, tags } });
-              rpc.request.saveTrackTags({ id: track.id, tags }).catch(console.error);
-            }
+          /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(SettingsView, {
+            onTriggerScan: triggerScan
           }, undefined, false, undefined, this)
         ]
-      }, undefined, true, undefined, this)
-    }, undefined, false, undefined, this)
-  }, undefined, false, undefined, this);
+      }, undefined, true, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(NowPlayingView, {
+        onPlayNext: playNext,
+        onPlayPrev: playPrev,
+        onTogglePlayPause: togglePlayPause
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(NowPlayingBar, {
+        onPlayNext: playNext,
+        onPlayPrev: playPrev,
+        onTogglePlayPause: togglePlayPause
+      }, undefined, false, undefined, this),
+      /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(TagDialog, {
+        onSave: handleTagDialogSave
+      }, undefined, false, undefined, this)
+    ]
+  }, undefined, true, undefined, this);
 };
+var App = ({ store, rpc, engine }) => /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(StoreContext.Provider, {
+  value: store,
+  children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(RPCContext.Provider, {
+    value: rpc,
+    children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(EngineContext.Provider, {
+      value: engine,
+      children: /* @__PURE__ */ jsx_dev_runtime13.jsxDEV(AppInner, {}, undefined, false, undefined, this)
+    }, undefined, false, undefined, this)
+  }, undefined, false, undefined, this)
+}, undefined, false, undefined, this);
 
 // src/app/index.tsx
 var jsx_dev_runtime14 = __toESM(require_jsx_dev_runtime(), 1);

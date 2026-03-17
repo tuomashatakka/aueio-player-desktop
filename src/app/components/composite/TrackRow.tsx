@@ -1,8 +1,9 @@
-import type { Track } from '../state/types'
-import { formatTime } from '../utils/dom'
-import { getTrackEmoji } from '../utils/audio'
-import { PlayingBars } from './PlayingBars'
-import { StarRating } from './StarRating'
+import { memo } from 'react'
+import type { Track } from '../../state/types'
+import { formatTime } from '../../utils/dom'
+import { getTrackEmoji } from '../../utils/audio'
+import { PlayingBars } from '../atomic/PlayingBars'
+import { StarRating } from '../atomic/StarRating'
 
 
 type Props = {
@@ -15,7 +16,7 @@ type Props = {
   readonly onRating:  (idx: number, rating: number) => void
 }
 
-export const TrackRow = ({ track, index, isCurrent, isPlaying, onPlay, onEdit, onRating }: Props) => {
+export const TrackRow = memo(({ track, index, isCurrent, isPlaying, onPlay, onEdit, onRating }: Props) => {
   const color = track.coverColor ?? 'hsl(220,60%,40%)'
   const emoji = getTrackEmoji(track)
 
@@ -132,4 +133,4 @@ export const TrackRow = ({ track, index, isCurrent, isPlaying, onPlay, onEdit, o
       </button>
     </div>
   )
-}
+})

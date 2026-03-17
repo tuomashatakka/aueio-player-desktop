@@ -1,10 +1,13 @@
+import { memo } from 'react'
+
+
 type Props = {
   readonly value:     number
   readonly readOnly?: boolean
   readonly onChange?: (rating: number) => void
 }
 
-export const StarRating = ({ value, readOnly, onChange }: Props) =>
+export const StarRating = memo(({ value, readOnly, onChange }: Props) =>
 
   <span
     role={readOnly ? 'img' : 'group'}
@@ -27,3 +30,4 @@ export const StarRating = ({ value, readOnly, onChange }: Props) =>
       </button>
     )}
   </span>
+)
