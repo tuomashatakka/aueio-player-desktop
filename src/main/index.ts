@@ -16,14 +16,14 @@ import { contextMenuState, createHandlers } from './rpc/handlers'
 import { createMainWindow } from './window'
 
 
-// Menu-item `action` id → the `media.command` it should send. View items
-//  carry an action id too, but the current RPC contract has no channel for
-//  view navigation, so they are accelerator-only until a later layer adds
-//  one.
-const PLAYBACK_ACTIONS: Record<string, MediaCommandType> = {
+// Menu-item `action` id → the `media.command` it should send.
+const MENU_ACTIONS: Record<string, MediaCommandType> = {
   'playback.play-pause': 'play-pause',
   'playback.next':       'next',
   'playback.previous':   'previous',
+  'view.library':        'open-library',
+  'view.now-playing':    'open-player',
+  'view.settings':       'open-settings',
 }
 
 const menuTemplate: MenuItemTemplate[] = [
@@ -116,7 +116,7 @@ scanner.onEvent(event => {
 ApplicationMenu.setApplicationMenu(menuTemplate)
 
 Electrobun.events.on('application-menu-clicked', actionId => {
-  const command = PLAYBACK_ACTIONS[actionId]
+  const command = MENU_ACTIONS[actionId]
   if (command)
     rpc.send['media.command']({ command })
 })

@@ -38,7 +38,7 @@ export type AppRPC = {
       'scan.done':     { scanId: string, total: number, pruned: string[] }
       'scan.error':    { scanId: string, message: string }
       'menu.action':   { menuId: string, actionId: string | null }
-      'media.command': { command: 'play-pause' | 'next' | 'previous' }
+      'media.command': { command: 'play-pause' | 'next' | 'previous' | 'open-library' | 'open-player' | 'open-settings' }
     }
   }>
 }
