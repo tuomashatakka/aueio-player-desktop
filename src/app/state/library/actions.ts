@@ -1,4 +1,4 @@
-import type { PlaylistJSON, TrackJSON } from '../../../shared/dto'
+import type { PlaylistJSON, TagPatchJSON, TrackJSON } from '../../../shared/dto'
 
 
 export interface LibraryPageReceived {
@@ -42,6 +42,13 @@ export interface LibraryTagsPatched {
   readonly track: TrackJSON
 }
 
+/** Asks the effect layer to run `gateway.patchTags(id, patch)` and fold the result into `library/tagsPatched`. */
+export interface LibraryTagsPatchRequested {
+  readonly type:  'library/tagsPatchRequested'
+  readonly id:    string
+  readonly patch: TagPatchJSON
+}
+
 export interface LibraryRootsChanged {
   readonly type:  'library/rootsChanged'
   readonly roots: readonly string[]
@@ -76,6 +83,7 @@ export type LibraryAction =
   LibraryScanDone |
   LibraryScanFailed |
   LibraryTagsPatched |
+  LibraryTagsPatchRequested |
   LibraryRootsChanged |
   LibraryPlaylistSaved |
   LibraryPlaylistDeleted |

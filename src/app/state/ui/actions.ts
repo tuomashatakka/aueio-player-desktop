@@ -2,7 +2,7 @@ import type { MenuItemJSON } from '../../../shared/dto'
 import type { Grouping } from '../../domain'
 import type { SortDir, SortKey } from '../library/selectors'
 import type { ColumnKey } from './columns'
-import type { Density, Overlay, PlayerMode, UiGrouping, UiView } from './state'
+import type { Density, Overlay, PlayerMode, UiGrouping, UiState, UiView } from './state'
 
 
 export interface UiViewChanged {
@@ -124,6 +124,29 @@ export interface UiContextMenuClosed {
   readonly type: 'ui/contextMenuClosed'
 }
 
+/** A popover menu item was activated; the effect layer interprets `actionId` against the menu that was open. */
+export interface UiContextMenuActioned {
+  readonly type:     'ui/contextMenuActioned'
+  readonly actionId: string
+}
+
+/** `persistence.ts` folds the `aueio-ui`-persisted subset back in on startup. */
+export interface UiHydrated {
+  readonly type:  'ui/hydrated'
+  readonly patch: Partial<Pick<UiState, 'density' | 'grouping' | 'sort' | 'columns' | 'sidebarOpen'>>
+}
+
+/** Asks the effect layer to run `gateway.pickRoot()` and fold the result into `settings/changed`. */
+export interface UiRootPickRequested {
+  readonly type: 'ui/rootPickRequested'
+}
+
+/** Asks the effect layer to run `gateway.windowCommand(command)`. */
+export interface UiWindowCommandRequested {
+  readonly type:    'ui/windowCommandRequested'
+  readonly command: 'minimize' | 'maximize' | 'close'
+}
+
 export type UiAction =
   | UiViewChanged |
   UiOverlayOpened |
@@ -147,4 +170,8 @@ export type UiAction =
   UiTagEditorOpened |
   UiTagEditorClosed |
   UiContextMenuRequested |
-  UiContextMenuClosed
+  UiContextMenuClosed |
+  UiContextMenuActioned |
+  UiHydrated |
+  UiRootPickRequested |
+  UiWindowCommandRequested

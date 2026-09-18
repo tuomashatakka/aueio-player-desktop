@@ -34,6 +34,11 @@ export interface PlayerEngineTime {
   readonly duration: number
 }
 
+/** Asks the effect layer to toggle `AudioEngine` play/pause; the engine's own event echoes back as `engineStarted`/`enginePaused`. */
+export interface PlayerPlayPauseRequested {
+  readonly type: 'player/playPauseRequested'
+}
+
 export interface PlayerSeekRequested {
   readonly type:     'player/seekRequested'
   readonly position: number
@@ -93,6 +98,7 @@ export type PlayerAction =
   PlayerEngineEnded |
   PlayerEngineErrored |
   PlayerEngineTime |
+  PlayerPlayPauseRequested |
   PlayerSeekRequested |
   PlayerVolumeChanged |
   PlayerShuffleToggled |

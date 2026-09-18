@@ -118,6 +118,10 @@ export function uiReducer (state: UiState, action: UiAction): UiState {
       }
     case 'ui/contextMenuClosed':
       return { ...state, contextMenu: null }
+    case 'ui/contextMenuActioned':
+      return { ...state, contextMenu: null }
+    case 'ui/hydrated':
+      return { ...state, ...action.patch }
     default:
       return state
   }
