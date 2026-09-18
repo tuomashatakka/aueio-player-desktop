@@ -7,7 +7,8 @@
  * `requests` map.
  */
 import { ContextMenu, Utils } from 'electrobun/main'
-import type { BrowserWindow } from 'electrobun/main'
+import type { BrowserWindow, MenuItemTemplate } from 'electrobun/main'
+import type { MenuItemJSON } from '../../shared/dto'
 import type { AppRPC } from '../../shared/rpc'
 import type { Library } from '../db/repository'
 import type { LibraryScanner } from '../library/scanner'
@@ -38,7 +39,13 @@ export interface HandlerContext {
   db:          Library
   scanner:     LibraryScanner
   media:       MediaServer
-  window:      BrowserWindow
+  getWindow:   () => BrowserWindow
+}
+
+function toMenuItem (item: MenuItemJSON): MenuItemTemplate {
+  if ('separator' in item)
+    return { type: 'separator' }
+  return { label: item.label, action: item.id, enabled: item.enabled, checked: item.checked }
 }
 
 export function createHandlers (ctx: HandlerContext): Handlers {
@@ -79,11 +86,15 @@ export function createHandlers (ctx: HandlerContext): Handlers {
       ({ origin: ctx.media.origin, token: ctx.media.token }),
     'menu.context': ({ menuId, items }) => {
       contextMenuState.menuId = menuId
-      ContextMenu.showContextMenu(items)
+      ContextMenu.showContextMenu(items.map(toMenuItem))
     },
     'window.command': ({ command, width, height }) =>
-      applyWindowCommand(ctx.window, { command, width, height }),
-    'shell.open': ({ kind, target }) =>
-      kind === 'external' ? Utils.openExternal(target) : Utils.showItemInFolder(target),
+      applyWindowCommand(ctx.getWindow(), { command, width, height }),
+    'shell.open': ({ kind, target }) => {
+      if (kind === 'external')
+        Utils.openExternal(target)
+      else
+        Utils.showItemInFolder(target)
+    },
   }
 }

@@ -39,24 +39,33 @@ declare module 'electrobun/main' {
 
   export interface BrowserWindowOptions {
     title?:         string
-    url?:           string
-    html?:          string
+    url?:           string | null
+    html?:          string | null
     titleBarStyle?: 'default' | 'hidden' | 'hiddenInset'
+    renderer?:      'native' | 'cef'
+    transparent?:   boolean
+    rpc?:           unknown
     frame?: {
-      x?:      number
-      y?:      number
-      width?:  number
-      height?: number
+      x?:     number
+      y?:     number
+      width:  number
+      height: number
     }
   }
 
   export class BrowserWindow {
     id: number
-    constructor (options: BrowserWindowOptions)
+    constructor (options?: BrowserWindowOptions)
     close (): void
+    focus (): void
     minimize (): void
     maximize (): void
+    unmaximize (): void
+    isMaximized (): boolean
+    setTitle (title: string): void
     setSize (width: number, height: number): void
+    setFrame (x: number, y: number, width: number, height: number): void
+    on (name: string, handler: (event: unknown) => void): void
   }
 
   // Every handler in `defineRPC`'s `requests` map takes that request's own
@@ -89,25 +98,46 @@ declare module 'electrobun/main' {
 
   export const BrowserView: BrowserViewType
 
-  export interface MenuItemTemplate {
-    label?:       string
-    role?:        string
-    accelerator?: string
-    action?:      string
-    type?:        'separator'
-    enabled?:     boolean
-    checked?:     boolean
-    submenu?:     MenuItemTemplate[]
+  export type MenuItemTemplate =
+    | { type: 'separator' | 'divider' } |
+    {
+      type?:        'normal'
+      label?:       string
+      role?:        string
+      accelerator?: string
+      action?:      string
+      data?:        unknown
+      enabled?:     boolean
+      checked?:     boolean
+      hidden?:      boolean
+      tooltip?:     string
+      submenu?:     MenuItemTemplate[]
+    }
+
+  export type MenuClickedData = {
+    id?:    number
+    action: string
+    data?:  unknown
+  }
+
+  export class ElectrobunEvent<Data = unknown, Response = unknown> {
+    name:           string
+    data:           Data
+    response:       Response | undefined
+    responseWasSet: boolean
+    clearResponse (): void
   }
 
   type ApplicationMenuType = {
     setApplicationMenu (template: MenuItemTemplate[]): void
+    on (name: 'application-menu-clicked', handler: (event: ElectrobunEvent<MenuClickedData, void>) => void): void
   }
 
   export const ApplicationMenu: ApplicationMenuType
 
   type ContextMenuType = {
-    showContextMenu (items: unknown[]): void
+    showContextMenu (items: MenuItemTemplate[]): void
+    on (name: 'context-menu-clicked', handler: (event: ElectrobunEvent<MenuClickedData, void>) => void): void
   }
 
   export const ContextMenu: ContextMenuType
@@ -120,17 +150,39 @@ declare module 'electrobun/main' {
     allowsMultipleSelection?: boolean
   }
 
+  type UserPaths = {
+    home:      string
+    appData:   string
+    config:    string
+    cache:     string
+    temp:      string
+    logs:      string
+    documents: string
+    downloads: string
+    desktop:   string
+    pictures:  string
+    music:     string
+    videos:    string
+    userData:  string
+    userCache: string
+    userLogs:  string
+  }
+
   type UtilsType = {
-    openFileDialog:   (options: OpenFileDialogOptions) => Promise<string[] | null>
-    openExternal:     (url: string) => void
+    openFileDialog:   (options: OpenFileDialogOptions) => Promise<string[]>
+    openExternal:     (url: string) => boolean
+    openPath:         (path: string) => boolean
     showItemInFolder: (path: string) => void
+    moveToTrash:      (path: string) => void
+    quit:             (code?: number) => boolean
+    paths:            UserPaths
   }
 
   export const Utils: UtilsType
 
   type PATHSType = {
-    userData: string
-    appPath:  string
+    RESOURCES_FOLDER: string
+    VIEWS_FOLDER:     string
   }
 
   export const PATHS: PATHSType
@@ -138,39 +190,84 @@ declare module 'electrobun/main' {
   // Known event names get a typed payload; anything else falls back to the
   // permissive signature so a not-yet-modelled event still compiles.
   type ElectrobunEventMap = {
-    'application-menu-clicked': (actionId: string) => void
-    'context-menu-clicked':     (actionId: string | null) => void
-    'before-quit':              () => void
+    'application-menu-clicked': (event: ElectrobunEvent<MenuClickedData, void>) => void
+    'context-menu-clicked':     (event: ElectrobunEvent<MenuClickedData, void>) => void
+    'before-quit':              (event: ElectrobunEvent<Record<string, never>, { allow: boolean }>) => void
   }
 
-  type ElectrobunType = {
-    events: {
-      on<K extends keyof ElectrobunEventMap> (event: K, handler: ElectrobunEventMap[K]): void
-      on (event: string, handler: (...args: unknown[]) => void): void
-      off<K extends keyof ElectrobunEventMap> (event: K, handler: ElectrobunEventMap[K]): void
-      off (event: string, handler: (...args: unknown[]) => void): void
-    }
+  type EventEmitterType = {
+    on<K extends keyof ElectrobunEventMap> (event: K, handler: ElectrobunEventMap[K]): void
+    on (event: string, handler: (event: unknown) => void): void
+    off (event: string, handler: (event: unknown) => void): void
   }
 
-  export const Electrobun: ElectrobunType
+  type ElectrobunDefault = {
+    events:          EventEmitterType
+    BrowserWindow:   typeof BrowserWindow
+    BrowserView:     BrowserViewType
+    ApplicationMenu: ApplicationMenuType
+    ContextMenu:     ContextMenuType
+    Utils:           UtilsType
+    PATHS:           PATHSType
+  }
+
+  const Electrobun: ElectrobunDefault
+
+  export default Electrobun
 }
 
 declare module 'electrobun/view' {
   export type RPCSchema<T> = T
 
-  type RpcType = {
-    request: Record<string, (params: unknown) => Promise<unknown>>
-    send:    Record<string, (payload: unknown) => void>
+  type SchemaShape = {
+    bun:     { requests: Record<string, unknown>, messages: Record<string, unknown> }
+    webview: { requests: Record<string, unknown>, messages: Record<string, unknown> }
   }
 
-  export class Electroview<Schema = unknown> {
-    rpc: RpcType
-    constructor (config?: { maxRequestTime?: number })
-    defineRPC (config: {
-      maxRequestTime?: number
-      handlers?: {
-        messages?: Record<string, (payload: unknown) => void>
-      }
-    }): void
+  // The webview's own `requests` map has no callers here (nothing in AppRPC
+  // asks main to call back into the view as a request), but `handlers.requests`
+  // is where the view would answer one if the schema ever grew one.
+  type RPCRequestHandlers<Requests> = {
+    [K in keyof Requests]: Requests[K] extends { params: infer P, response: infer R }
+      ? (params: P) => R | Promise<R>
+      : never
+  }
+
+  type RPCMessageHandlers<Messages> = {
+    [K in keyof Messages]: (payload: Messages[K]) => void
+  }
+
+  // What `Electroview.defineRPC` hands back: one async caller per `bun`
+  // request, resolving to that request's own response type.
+  type RPCRequestCallers<Requests> = {
+    [K in keyof Requests]: Requests[K] extends { params: infer P, response: infer R }
+      ? (params: P, opts?: { timeout?: number }) => Promise<R>
+      : never
+  }
+
+  // One fire-and-forget sender per message the view may push to main
+  // (`bun.messages` — empty in `AppRPC` today, but the shape stays generic).
+  type RPCSenders<Messages> = {
+    [K in keyof Messages]: (payload: Messages[K]) => void
+  }
+
+  export interface RPCDefineConfig<Schema extends SchemaShape> {
+    maxRequestTime?: number
+    handlers: {
+      requests?: RPCRequestHandlers<Schema['webview']['requests']>
+      messages?: RPCMessageHandlers<Schema['webview']['messages']>
+    }
+  }
+
+  export interface RPCHandle<Schema extends SchemaShape> {
+    request: RPCRequestCallers<Schema['bun']['requests']>
+    send:    RPCSenders<Schema['bun']['messages']>
+  }
+
+  export class Electroview<Rpc = RPCHandle<SchemaShape>> {
+    rpc: Rpc
+    constructor (config?: { rpc?: Rpc })
+
+    static defineRPC<Schema extends SchemaShape> (config: RPCDefineConfig<Schema>): RPCHandle<Schema>
   }
 }

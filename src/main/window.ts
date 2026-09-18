@@ -8,8 +8,9 @@ import type { AppRPC } from '../shared/rpc'
 
 type WindowCommandParams = AppRPC['bun']['requests']['window.command']['params']
 
-export function createMainWindow (): BrowserWindow {
+export function createMainWindow (rpc: unknown): BrowserWindow {
   return new BrowserWindow({
+    rpc,
     title:         'Aüeio Player',
     url:           'views://app/index.html',
     titleBarStyle: 'hiddenInset',

@@ -5,7 +5,7 @@
  * docs/plans/desktop-audio-migration.md §8 and L2.
  */
 import { join } from 'node:path'
-import { ApplicationMenu, BrowserView, Electrobun, PATHS } from 'electrobun/main'
+import Electrobun, { ApplicationMenu, BrowserView, Utils } from 'electrobun/main'
 import type { MenuItemTemplate } from 'electrobun/main'
 import type { TrackJSON } from '../shared/dto'
 import type { AppRPC } from '../shared/rpc'
@@ -74,7 +74,7 @@ const menuTemplate: MenuItemTemplate[] = [
   },
 ]
 
-const settingsDir = PATHS.userData
+const settingsDir = Utils.paths.userData
 const dbPath      = join(settingsDir, 'library.db')
 const db          = openLibrary(dbPath)
 const scanner     = createLibraryScanner(dbPath)
@@ -84,15 +84,20 @@ const media       = startMediaServer({
   resolveArt: id =>
     db.artwork.get(id) ?? null,
 })
-const window = createMainWindow()
-
 const rpc = BrowserView.defineRPC<AppRPC>({
   maxRequestTime: 30_000,
   handlers:       {
-    requests: createHandlers({ settingsDir, db, scanner, media, window }),
+    requests: createHandlers({ settingsDir,
+      db,
+      scanner,
+      media,
+      getWindow: () =>
+        window }),
     messages: {},
   },
 })
+
+const window = createMainWindow(rpc)
 
 type MediaCommandType = AppRPC['webview']['messages']['media.command']['command']
 
@@ -115,16 +120,16 @@ scanner.onEvent(event => {
 
 ApplicationMenu.setApplicationMenu(menuTemplate)
 
-Electrobun.events.on('application-menu-clicked', actionId => {
-  const command = MENU_ACTIONS[actionId]
+Electrobun.events.on('application-menu-clicked', event => {
+  const command = MENU_ACTIONS[event.data.action]
   if (command)
     rpc.send['media.command']({ command })
 })
 
-Electrobun.events.on('context-menu-clicked', actionId => {
+Electrobun.events.on('context-menu-clicked', event => {
   const menuId = contextMenuState.menuId
   if (menuId)
-    rpc.send['menu.action']({ menuId, actionId })
+    rpc.send['menu.action']({ menuId, actionId: event.data.action || null })
 })
 
 Electrobun.events.on('before-quit', () => {
