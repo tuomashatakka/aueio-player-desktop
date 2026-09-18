@@ -109,6 +109,8 @@ async function captureMainScreens (page: Page, suffix: string): Promise<void> {
   if (suffix === '')
     await attempt(page, 'tag-editor.png', async () => {
       // Earlier shots leave the expanded player open and the shell inert; start clean.
+      await page.evaluate(() =>
+        localStorage.clear())
       await page.reload()
       await page.waitForSelector('tbody tr[data-track-id]', { timeout: TIMEOUT })
 
@@ -120,7 +122,7 @@ async function captureMainScreens (page: Page, suffix: string): Promise<void> {
       const dialog = page.locator('dialog.tag-editor, dialog[open]').first()
       if (!await dialog.isVisible({ timeout: TIMEOUT }).catch(() => false))
         await page.keyboard.press('Meta+i')
-      await page.waitForSelector('dialog.tag-editor, dialog[open]', { state: 'visible', timeout: TIMEOUT })
+      await page.waitForSelector('dialog.tag-editor[open]', { state: 'visible', timeout: TIMEOUT })
     })
 }
 
@@ -139,6 +141,11 @@ async function main (): Promise<void> {
     console.log('dark theme:')
     await captureMainScreens(page, '')
 
+    // The dark pass leaves dialogs and popovers open; start the light pass clean.
+    await page.evaluate(() =>
+      localStorage.clear())
+    await page.reload()
+    await page.waitForSelector('main[data-view]', { timeout: TIMEOUT }).catch(() => {})
     await page.evaluate(() => {
       document.documentElement.dataset.theme = 'light'
     })
