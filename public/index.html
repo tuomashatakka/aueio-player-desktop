@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aüeio Player</title>
+  <meta name="description" content="A lightweight desktop music player: library, now playing with chord/key/tempo analysis, DSP and playlists.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <header class="hero">
+    <p class="eyebrow">Electrobun 2 &middot; Bun &middot; React 19</p>
+    <h1>Aüeio Player</h1>
+    <p class="pitch">A lightweight desktop music player with a chord, key and tempo reading for every track.</p>
+    <nav class="downloads" aria-label="Download">
+      <a class="button" href="https://github.com/tuomashatakka/aueio-player-desktop/releases/latest/download/macos-arm64-AueioPlayer.dmg">
+        <span class="platform">macOS</span>
+        <span class="asset">Apple Silicon &middot; .dmg</span>
+      </a>
+      <a class="button" href="https://github.com/tuomashatakka/aueio-player-desktop/releases/latest/download/windows-x64-AueioPlayer.zip">
+        <span class="platform">Windows</span>
+        <span class="asset">x64 &middot; .zip</span>
+      </a>
+      <a class="button" href="https://github.com/tuomashatakka/aueio-player-desktop/releases/latest/download/linux-x64-AueioPlayer.tar.gz">
+        <span class="platform">Linux</span>
+        <span class="asset">x64 &middot; .tar.gz</span>
+      </a>
+    </nav>
+    <p class="all-releases">
+      <a href="https://github.com/tuomashatakka/aueio-player-desktop/releases/latest">See every release on GitHub &rarr;</a>
+    </p>
+  </header>
+
+  <main>
+    <section id="features" aria-labelledby="features-heading">
+      <h2 id="features-heading">What it does</h2>
+      <ul class="features">
+        <li>
+          <h3>Library</h3>
+          <p>Scans your folders, reads real tags and durations, and stays out of the way while it streams results in.</p>
+        </li>
+        <li>
+          <h3>Now playing, two views</h3>
+          <p>Album art or a live chord/key/tempo analysis view, both under one lyrics layer that slides in from the edge.</p>
+        </li>
+        <li>
+          <h3>Artwork-derived accent</h3>
+          <p>The whole interface's accent colour is lifted from the playing track's artwork, contrast-checked against the surface.</p>
+        </li>
+        <li>
+          <h3>Slim DSP</h3>
+          <p>A ten-band ISO octave equaliser with a live response curve and a limiter, no plugin marketplace required.</p>
+        </li>
+        <li>
+          <h3>Full keyboard control</h3>
+          <p>Twelve default bindings covering playback, navigation and views, all rebindable in Settings.</p>
+        </li>
+        <li>
+          <h3>Tag editing</h3>
+          <p>Edits are stored in the app's own database, never written back into your audio files.</p>
+        </li>
+      </ul>
+    </section>
+
+    <section id="screenshots" aria-labelledby="screenshots-heading">
+      <h2 id="screenshots-heading">Screenshots</h2>
+      <div class="gallery">
+        <figure>
+          <img src="../docs/screenshots/library-list.png" alt="Library, list view" loading="lazy">
+          <figcaption>Library &mdash; list</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/library-grid.png" alt="Library, grid view" loading="lazy">
+          <figcaption>Library &mdash; grid</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/player-art.png" alt="Now playing, album art view" loading="lazy">
+          <figcaption>Now playing &mdash; art</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/player-analysis.png" alt="Now playing, chord/key/tempo analysis view" loading="lazy">
+          <figcaption>Now playing &mdash; analysis</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/player-lyrics.png" alt="Now playing, lyrics layer" loading="lazy">
+          <figcaption>Now playing &mdash; lyrics</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/waveform.png" alt="Seek bar waveform" loading="lazy">
+          <figcaption>Waveform</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/dsp.png" alt="Ten-band DSP page" loading="lazy">
+          <figcaption>DSP</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/settings.png" alt="Settings" loading="lazy">
+          <figcaption>Settings</figcaption>
+        </figure>
+        <figure>
+          <img src="../docs/screenshots/tag-editor.png" alt="Tag editor" loading="lazy">
+          <figcaption>Tag editor</figcaption>
+        </figure>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>
+      <a href="https://github.com/tuomashatakka/aueio-player-desktop">tuomashatakka/aueio-player-desktop</a>
+      <span class="version">v0.2.0</span>
+    </p>
+  </footer>
+</body>
+</html>
