@@ -27,10 +27,8 @@ Grab the latest build from
 | Windows (x64) | `win-x64-AueioPlayer-Setup.zip` |
 | Linux (x64) | `linux-x64-AueioPlayer-Setup.tar.gz` |
 
-Only the macOS asset name above is confirmed from a real build; the Windows
-and Linux names follow the same `<os>-<arch>-AueioPlayer.<ext>` convention
-the CI build matrix produces, but check the release page if a name doesn't
-match.
+Each release also carries `stable-<os>-<arch>-*.tar.zst` update bundles and
+`update.json` files used by the in-app updater.
 
 ## Screenshots
 
