@@ -1,0 +1,18 @@
+/** Barrel for every services module. See AGENTS.md L5 and docs/plans/desktop-audio-migration.md §5, §8, §9, §12. */
+
+export * from './analysis/analyze'
+export * from './analysis/chords'
+export * from './analysis/chroma'
+export * from './analysis/client'
+export * from './analysis/key'
+export * from './analysis/peaks'
+export * from './analysis/tempo'
+export * from './audio/dspChain'
+export * from './audio/engine'
+export * from './audio/eqResponse'
+export * from './gateway/FakeGateway'
+export * from './gateway/Gateway'
+export * from './gateway/RpcGateway'
+export * from './keybindings'
+export * from './menu/afterPointerRelease'
+export * from './palette/extract'

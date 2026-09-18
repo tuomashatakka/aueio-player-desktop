@@ -1,44 +1,28 @@
-import { reducer } from './reducer'
-import type { PlayerState } from './types'
-import type { Action } from './actions'
+/** `createStores()` wires up the app's four independent stores. See AGENTS.md L4. */
+import { createStore } from './store'
+import type { Store } from './store'
+import { createLibraryState, libraryReducer } from './library'
+import type { LibraryAction, LibraryState } from './library'
+import { createPlayerState, playerReducer } from './player'
+import type { PlayerAction, PlayerState } from './player'
+import { createSettingsState, settingsReducer } from './settings'
+import type { SettingsAction, SettingsState } from './settings'
+import { createUiState, uiReducer } from './ui'
+import type { UiAction, UiState } from './ui'
 
 
-export type Listener = (state: PlayerState) => void
-
-export type Store = {
-  readonly getState:  () => PlayerState
-  readonly dispatch:  (action: Action) => void
-  readonly subscribe: (fn: Listener) => () => void
+export interface Stores {
+  readonly library:  Store<LibraryState, LibraryAction>
+  readonly player:   Store<PlayerState, PlayerAction>
+  readonly settings: Store<SettingsState, SettingsAction>
+  readonly ui:       Store<UiState, UiAction>
 }
 
-export const createStore = (initialState: PlayerState): Store => {
-  // eslint-disable-next-line functional/no-let
-  let state = initialState
-  const listeners = new Set<Listener>()
-
+export function createStores (): Stores {
   return {
-    getState: () =>
-      state,
-
-    dispatch: (action: Action) => {
-      state = reducer(state, action)
-      for (const fn of listeners)
-        fn(state)
-    },
-
-    subscribe: (fn: Listener) => {
-      listeners.add(fn)
-      return () => {
-        listeners.delete(fn)
-      }
-    },
+    library:  createStore(libraryReducer, createLibraryState()),
+    player:   createStore(playerReducer, createPlayerState()),
+    settings: createStore(settingsReducer, createSettingsState()),
+    ui:       createStore(uiReducer, createUiState()),
   }
 }
-
-export { initialState } from './types'
-
-export type { PlayerState } from './types'
-
-export type { Action } from './actions'
-
-export { ActionType } from './actions'

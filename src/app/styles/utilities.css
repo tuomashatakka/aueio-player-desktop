@@ -1,37 +1,43 @@
-/**
- * Utilities — audioblocks-design-system
+/* .sr-only, .fade-y, .truncate — that's it. */
+
+/*
+ * `var()` here resolves against tokens declared in tokens.css, but
+ * `@eslint/css`'s `css/no-invalid-properties` only sees declarations
+ * inside the file it is currently linting (files are linted
+ * independently, `@import` is not inlined) — so every reference to a
+ * tokens.css custom property reads as "unknown" here even though it
+ * is the One Token Contract's single declaration. allowUnknownVariables
+ * keeps the rule checking real property/value validity in this file
+ * while accepting that.
  */
+/* eslint css/no-invalid-properties: ["error", { "allowUnknownVariables": true }] */
 
 @layer utilities {
-
   .sr-only {
-    position: absolute; width: 1px; height: 1px;
-    padding: 0; margin: -1px; overflow: hidden;
-    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-  }
-
-  [data-stack] {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-4);
-    &[data-stack="sm"] { gap: var(--sp-2); }
-    &[data-stack="lg"] { gap: var(--sp-6); }
-  }
-
-  [data-cluster] {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-3);
-    align-items: center;
-  }
-
-  [data-truncate] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
     overflow: hidden;
-    text-overflow: ellipsis;
+    clip-path: inset(50%);
     white-space: nowrap;
+    border: 0;
   }
 
-  [hidden], [data-hidden] {
-    display: none !important;
+  .truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .fade-y {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      black var(--spacing-4),
+      black calc(100% - var(--spacing-4)),
+      transparent
+    );
   }
 }

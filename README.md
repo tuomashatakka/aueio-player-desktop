@@ -1,136 +1,80 @@
-# Aüeio Player Desktop
+# aüeio player
 
-A beautiful, minimal cross-platform audio player built with Electrobun + Bun.
+A lightweight desktop music player: library scanning, a now-playing view with
+a chord/key/tempo analysis mode and a lyrics layer, a slim 10-band DSP page,
+playlists, tag editing, and an accent colour lifted straight from the
+playing track's artwork.
 
----
+Built on [Electrobun 2](https://electrobun.dev) (Bun main process, system
+WebKit webview) and React 19 — a from-scratch, deliberately smaller rebuild
+of `desktop-audio`. Two views (album art, chord/key/tempo analysis) share one
+layer (lyrics, on the trailing edge); the player renders one markup for both
+the footer bar and the expanded overlay. Full keyboard control ships with
+twelve default bindings, editable in Settings → Hotkeys. See
+[`docs/plans/desktop-audio-migration.md`](./docs/plans/desktop-audio-migration.md)
+for the complete spec and the reasoning behind every cut feature.
 
-## Architecture
+Bun only — never npm, yarn, or pnpm.
 
-```
-src/
-├── app/                    ← Frontend (webview)
-│   ├── index.ts            ← Entry point: wires all modules together
-│   ├── index.html          ← Semantic HTML, single-page app shell
-│   ├── state/              ← Reducer/action state management
-│   │   ├── types.ts        ← PlayerState type, initialState
-│   │   ├── actions.ts      ← ActionType enum, Action union type
-│   │   ├── reducer.ts      ← Pure (state, action) => state reducer
-│   │   └── index.ts        ← createStore(), Store type
-│   ├── audio/
-│   │   ├── AudioEngine.ts  ← Singleton class: Web Audio API lifecycle
-│   │   └── waveform.ts     ← Pure: loadWaveformData(), drawWaveformToCanvas()
-│   ├── views/
-│   │   ├── library.ts      ← Library view render + events + playback side effects
-│   │   ├── settings.ts     ← Settings view render + folder management
-│   │   └── nowPlaying.ts   ← Now Playing bar + expanded view + audio engine events
-│   ├── components/
-│   │   ├── trackItem.ts    ← buildTrackItem() → HTMLElement
-│   │   └── folderItem.ts   ← buildFolderItem() → HTMLElement
-│   ├── navigation/
-│   │   └── index.ts        ← History API navigation (navigate, bindPopState)
-│   ├── rpc/
-│   │   └── index.ts        ← Electroview RPC client initialization
-│   ├── utils/
-│   │   ├── dom.ts          ← $(), formatTime(), escapeHtml()
-│   │   └── audio.ts        ← buildAudioUrl(), getTrackEmoji()
-│   └── styles/             ← CSS design system (7 layered files)
-└── bun/                    ← Backend (Bun main process)
-    ├── index.ts            ← App window, HTTP audio server, RPC handlers
-    ├── rpc.ts              ← Shared type contracts
-    ├── library.ts          ← Music library file scanner
-    └── settings.ts         ← Settings persistence (~/.config)
-```
+## Download
 
-### State Management
+Grab the latest build from
+[**GitHub Releases**](https://github.com/tuomashatakka/aueio-player-desktop/releases/latest):
 
-All UI state changes go through the store's `dispatch()` function using the reducer/action pattern.
-No direct state mutation occurs anywhere in the frontend.
+| Platform | Asset |
+|---|---|
+| macOS (Apple Silicon) | `macos-arm64-AueioPlayer.dmg` |
+| Windows (x64) | `windows-x64-AueioPlayer.zip` *(as published by CI)* |
+| Linux (x64) | `linux-x64-AueioPlayer.tar.gz` *(as published by CI)* |
 
-```
-UI Event → dispatch(action) → reducer(state, action) → new state → subscribe callbacks → render
-```
+Only the macOS asset name above is confirmed from a real build; the Windows
+and Linux names follow the same `<os>-<arch>-AueioPlayer.<ext>` convention
+the CI build matrix produces, but check the release page if a name doesn't
+match.
 
-The `AudioEngine` singleton class manages the Web Audio API lifecycle (the one place a class
-is justified — browser context lifecycle management).
+## Screenshots
 
-### Navigation
+| | |
+|---|---|
+| Library — list | Library — grid |
+| <img src="docs/screenshots/library-list.png" alt="Library, list view" width="420"> | <img src="docs/screenshots/library-grid.png" alt="Library, grid view" width="420"> |
+| Now playing — album art | Now playing — analysis |
+| <img src="docs/screenshots/player-art.png" alt="Now playing, album art view" width="420"> | <img src="docs/screenshots/player-analysis.png" alt="Now playing, chord/key/tempo analysis view" width="420"> |
+| Now playing — lyrics | Waveform |
+| <img src="docs/screenshots/player-lyrics.png" alt="Now playing, lyrics layer" width="420"> | <img src="docs/screenshots/waveform.png" alt="Seek bar waveform" width="420"> |
+| DSP | Settings |
+| <img src="docs/screenshots/dsp.png" alt="10-band DSP page" width="420"> | <img src="docs/screenshots/settings.png" alt="Settings" width="420"> |
+| Tag editor | |
+| <img src="docs/screenshots/tag-editor.png" alt="Tag editor" width="420"> | |
 
-View changes push entries to `history.pushState()`. Browser back/forward navigation
-dispatches state changes via the `popstate` event.
-
-```
-navigate('settings') → history.pushState → URL: #settings
-Browser back → popstate → dispatch(VIEW_CHANGED) → render
-```
-
----
+Screenshots are generated by `bun run screenshots` (drives a static
+`build/web` build through Playwright) and written to `docs/screenshots/`;
+some of the files above may not exist yet in a fresh checkout until that
+script has been run.
 
 ## Development
 
 ```bash
-# Start dev server with hot reload
-bun dev
-
-# Run E2E tests (Playwright)
-bun test
-
-# Lint (ESLint)
-bun run lint
-
-# Auto-fix lint issues
-bun run lint:fix
-
-# Production build
-bun run build
+bun install
+bun run dev                # hutch electrobun dev --watch
+bun run check               # lint + typecheck + unit tests
+bun run test:e2e             # playwright, against a static build/web build
+bun run screenshots           # regenerate docs/screenshots/*.png
+bun run build:stable           # production build (hutch electrobun build --env=stable)
 ```
 
----
+## Architecture
 
-## Testing
+See [`AGENTS.md`](./AGENTS.md) for the folder map, the unidirectional
+data-flow rules and their lint enforcement, the RPC contract, persistence,
+the CSS layer system, and testing conventions, and
+[`docs/plans/desktop-audio-migration.md`](./docs/plans/desktop-audio-migration.md)
+for the full design spec. Also see
+[`docs/keybindings.md`](./docs/keybindings.md),
+[`docs/music-analysis.md`](./docs/music-analysis.md) and
+[`docs/css-architecture.md`](./docs/css-architecture.md).
 
-E2E tests use Playwright + Chromium against a local HTTP server serving the webview:
+## License
 
-```
-tests/app.spec.ts              ← Core UI: layout, navigation, accessibility
-tests/library-populated.spec.ts ← Library view: search, track list, view state
-tests/now-playing.spec.ts       ← Now Playing: bar, expand, controls, history API
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Desktop framework | [Electrobun](https://electrobun.dev) |
-| Runtime | [Bun](https://bun.sh) |
-| Language | TypeScript (strict mode) |
-| Frontend | Vanilla DOM + Web Audio API |
-| Styling | Semantic HTML + CSS layers (no Tailwind, no jQuery) |
-| Tests | Playwright |
-| Linting | ESLint + @stylistic + @typescript-eslint + functional + unicorn |
-| CI/CD | GitHub Actions |
-
----
-
-## Design Principles
-
-- Semantic HTML first — no component frameworks
-- CSS layers (`tokens → reset → base → states → components → utilities → app`)
-- Data attributes for state, not class names
-- Functional patterns — reducer/action for state, pure functions for rendering
-- No jQuery, no Tailwind, no utility-class frameworks
-- See `docs/DESIGN_GUIDE.md` and `docs/STYLE_GUIDE.md` for full details
-
----
-
-## Release
-
-Push a version tag to trigger a release build:
-
-```bash
-git tag v0.2.0
-git push origin v0.2.0
-```
-
-GitHub Actions will build binaries for macOS, Linux, and Windows and publish a GitHub Release.
+No license file has been published for this repository yet. All rights
+reserved by the author until one is added.

@@ -1,140 +1,368 @@
-/**
- * Base Element Styles — audioblocks-design-system
+/* Reset + element-level defaults only. No class ever. */
+
+/*
+ * `var()` here resolves against tokens declared in tokens.css, but
+ * `@eslint/css`'s `css/no-invalid-properties` only sees declarations
+ * inside the file it is currently linting (files are linted
+ * independently, `@import` is not inlined) — so every reference to a
+ * tokens.css custom property reads as "unknown" here even though it
+ * is the One Token Contract's single declaration. allowUnknownVariables
+ * keeps the rule checking real property/value validity in this file
+ * while accepting that.
  */
+/* eslint css/no-invalid-properties: ["error", { "allowUnknownVariables": true }] */
 
 @layer base {
+  *,
+  ::before,
+  ::after {
+    box-sizing: border-box;
+  }
 
   html {
-    color-scheme: dark;
+    font-family: var(--font-family-sans);
+    line-height: var(--font-line-height-base);
+    -webkit-font-smoothing: antialiased;
   }
 
   body {
-    font-family: var(--font);
-    font-size: var(--text-base);
-    color: var(--text);
-    background: var(--bg);
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    min-block-size: 100dvb;
+    overflow: hidden;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: var(--font-semibold);
-    line-height: var(--leading-tight);
-    color: var(--text);
-    margin-bottom: var(--sp-3);
-
-    &:last-child { margin-bottom: 0; }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0;
+    font-family: var(--font-family-sans);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--font-line-height-tight);
   }
 
-  h1 { font-size: var(--text-3xl); font-weight: var(--font-bold); letter-spacing: -0.02em; }
-  h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
-  h3 { font-size: var(--text-xl); }
-  h4 { font-size: var(--text-lg); }
-  h5, h6 { font-size: var(--text-base); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-
-  p {
-    color: var(--text-dim);
-    margin-bottom: var(--sp-3);
-    &:last-child { margin-bottom: 0; }
+  h1 {
+    font-size: var(--font-size-3xl);
   }
 
-  small { font-size: var(--text-sm); color: var(--text-muted); }
-  strong, b { font-weight: var(--font-semibold); color: var(--text); }
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
 
-  a {
-    color: var(--accent-alt);
-    transition: color var(--duration-fast) var(--ease);
-    &:hover { color: var(--accent-alt-hover); }
+  h3 {
+    font-size: var(--font-size-xl);
+  }
+
+  h4 {
+    font-size: var(--font-size-lg);
+  }
+
+  h5 {
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-medium);
+  }
+
+  h6 {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
   }
 
   button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-2);
-    min-height: var(--touch-target);
-    padding: var(--sp-2) var(--sp-4);
-    font-size: var(--text-base);
-    font-weight: var(--font-medium);
-    color: var(--text);
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition:
-      background var(--duration-fast) var(--ease),
-      border-color var(--duration-fast) var(--ease),
-      transform var(--duration-fast) var(--ease);
-
-    &:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--border-hover); }
-    &:active:not(:disabled) { transform: scale(0.98); }
-
-    &[data-variant="primary"] {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: white;
-      &:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
-    }
-
-    &[data-variant="ghost"] {
-      background: transparent;
-      border-color: transparent;
-      &:hover:not(:disabled) { background: var(--bg-input); }
-    }
-
-    &[data-size="sm"] { min-height: 32px; padding: var(--sp-1) var(--sp-3); font-size: var(--text-sm); }
-    &[data-size="lg"] { min-height: 52px; padding: var(--sp-3) var(--sp-6); font-size: var(--text-lg); }
-
-    &[data-icon] { width: var(--touch-target); padding: 0; }
-    &[data-icon][data-size="sm"] { width: 32px; min-height: 32px; }
-    &[data-icon][data-size="lg"] { width: 52px; min-height: 52px; }
-  }
-
-  input,
-  textarea,
-  select {
-    width: 100%;
-    min-height: var(--touch-target);
-    padding: var(--sp-2) var(--sp-3);
-    font-size: var(--text-base);
-    color: var(--text);
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    transition:
-      border-color var(--duration-fast) var(--ease),
-      box-shadow var(--duration-fast) var(--ease);
-
-    &::placeholder { color: var(--text-muted); }
-    &:hover:not(:disabled):not(:focus) { border-color: var(--border-hover); }
-    &:focus {
-      outline: none;
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 2px var(--accent-muted);
-    }
-  }
-
-  input[type="range"] {
-    height: 20px;
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: 0;
     padding: 0;
-    background: transparent;
     cursor: pointer;
 
-    &::-webkit-slider-track { height: 4px; background: var(--bg-input); border-radius: 2px; }
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 16px; height: 16px; margin-top: -6px;
-      background: var(--accent); border: none; border-radius: var(--radius-full);
-      transition: transform var(--duration-fast) var(--ease);
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--focus-ring);
     }
-    &::-webkit-slider-thumb:hover { transform: scale(1.15); }
-    &:focus { box-shadow: none; }
+
+    &[aria-pressed='true'] {
+      color: var(--accent);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
   }
 
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb {
-    background: var(--bg-input);
-    border-radius: var(--radius);
-    &:hover { background: var(--bg-hover); }
+  input {
+    font: inherit;
+    color: inherit;
+    background: var(--surface-input);
+    border: var(--border-width-1) solid var(--line);
+    border-radius: var(--border-radius-small);
+    padding-block: var(--spacing-1);
+    padding-inline: var(--spacing-2);
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--focus-ring);
+    }
+
+    &[type='range'] {
+      appearance: none;
+      background: none;
+      border: 0;
+      padding: 0;
+      block-size: var(--spacing-4);
+
+      /* eslint-disable-next-line unicorn/no-unknown-pseudo-selectors -- vendor-prefixed pseudo-element; WebKitGTK has no unprefixed equivalent for styling the range track */
+      &::-webkit-slider-runnable-track {
+        block-size: var(--border-width-2);
+        border-radius: var(--border-radius-full);
+        background: var(--line);
+      }
+
+      /* eslint-disable-next-line unicorn/no-unknown-pseudo-selectors -- vendor-prefixed pseudo-element; WebKitGTK has no unprefixed equivalent for styling the range thumb */
+      &::-webkit-slider-thumb {
+        appearance: none;
+        inline-size: var(--spacing-3);
+        block-size: var(--spacing-3);
+        margin-block-start: calc(var(--border-width-2) / 2 - var(--spacing-3) / 2);
+        border-radius: var(--border-radius-full);
+        background: var(--accent);
+        box-shadow: var(--shadow-shallow);
+      }
+    }
+
+    &[type='search'] {
+      border-radius: var(--border-radius-full);
+
+      /* eslint-disable-next-line unicorn/no-unknown-pseudo-selectors -- vendor-prefixed pseudo-element; hides the native search-field clear icon */
+      &::-webkit-search-cancel-button {
+        appearance: none;
+      }
+    }
   }
 
-  ::selection { background: var(--accent-muted); color: var(--text); }
+  select {
+    font: inherit;
+    color: inherit;
+    background: var(--surface-input);
+    border: var(--border-width-1) solid var(--line);
+    border-radius: var(--border-radius-small);
+    padding-block: var(--spacing-1);
+    padding-inline: var(--spacing-2);
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--focus-ring);
+    }
+  }
+
+  label {
+    font-size: var(--font-size-sm);
+    color: var(--ink-dim);
+  }
+
+  fieldset {
+    border: var(--border-width-1) solid var(--line);
+    border-radius: var(--border-radius-base);
+    padding: var(--spacing-3);
+  }
+
+  legend {
+    padding-inline: var(--spacing-1);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--ink-dim);
+  }
+
+  dialog {
+    border: 0;
+    padding: 0;
+    background: var(--surface-raised);
+    color: inherit;
+    box-shadow: var(--shadow-floating);
+    border-radius: var(--border-radius-large);
+    max-inline-size: min(90vi, 48rem);
+    max-block-size: 90dvb;
+    opacity: 1;
+    scale: 1;
+    transition:
+      opacity var(--duration-base) var(--ease),
+      scale var(--duration-base) var(--ease),
+      display var(--duration-base) allow-discrete,
+      overlay var(--duration-base) allow-discrete;
+
+    &:not([open]) {
+      opacity: 0;
+      scale: 0.96;
+    }
+
+    &::backdrop {
+      background: rgb(0 0 0 / 45%);
+      backdrop-filter: blur(0.5rem);
+    }
+  }
+
+  /*
+   * Hoisted out of `dialog { … }`: this project's `@eslint/css` (css-tree
+   * 4.1.1) doesn't forward `allowNestedRules` into `@starting-style`'s block
+   * parser the way it does for `@media`, so a selector rule nested two
+   * levels deep (`dialog { @starting-style { &[open] {…} } }`) is a parse
+   * error under this linter even though every targeted engine runs it fine.
+   * A top-level `@starting-style` with the full selector is identical CSS.
+   */
+  @starting-style {
+    dialog[open] {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  details {
+    summary {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      cursor: pointer;
+      list-style: none;
+
+      /* eslint-disable-next-line unicorn/no-unknown-pseudo-selectors -- vendor-prefixed pseudo-element; hides WebKit's native disclosure triangle so ::before can draw the chevron */
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &::before {
+        content: '';
+        inline-size: 0.375rem;
+        block-size: 0.375rem;
+        border-inline-end: var(--border-width-2) solid currentcolor;
+        border-block-end: var(--border-width-2) solid currentcolor;
+        transform: rotate(-45deg);
+        transition: transform var(--duration-fast) var(--ease);
+      }
+    }
+
+    &[open] summary::before {
+      transform: rotate(45deg);
+    }
+  }
+
+  table {
+    inline-size: 100%;
+    border-collapse: collapse;
+
+    thead th {
+      position: sticky;
+      inset-block-start: 0;
+      background: var(--surface);
+      text-align: start;
+      font-weight: var(--font-weight-medium);
+      color: var(--ink-dim);
+      padding-block: var(--spacing-2);
+      padding-inline: var(--spacing-2);
+    }
+
+    tbody tr {
+      content-visibility: auto;
+      contain-intrinsic-block-size: auto var(--row-h);
+    }
+
+    td {
+      padding-block: var(--spacing-1);
+      padding-inline: var(--spacing-2);
+    }
+  }
+
+  menu,
+  ul,
+  ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  [popover] {
+    margin: 0;
+    inset: auto;
+    border: 0;
+    padding: var(--spacing-2);
+    background: var(--surface-raised);
+    color: inherit;
+    border-radius: var(--border-radius-base);
+    box-shadow: var(--shadow-elevated);
+    opacity: 0;
+    scale: 0.98;
+    transition:
+      opacity var(--duration-fast) var(--ease),
+      scale var(--duration-fast) var(--ease),
+      display var(--duration-fast) allow-discrete,
+      overlay var(--duration-fast) allow-discrete;
+
+    &:popover-open {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  /* Hoisted for the same `@starting-style` nesting-depth reason as `dialog` above. */
+  @starting-style {
+    [popover]:popover-open {
+      opacity: 0;
+      scale: 0.98;
+    }
+  }
+
+  progress,
+  meter {
+    /* eslint-disable-next-line css/use-baseline -- accent-color is supported by every engine desktop-audio targets (chrome146); the rule's 'newly' baseline window is stricter than this app's platform floor */
+    accent-color: var(--accent);
+    inline-size: 100%;
+    block-size: 0.375rem;
+  }
+
+  kbd {
+    font-family: var(--font-family-mono);
+    font-size: var(--font-size-xs);
+    padding-block: var(--spacing-0-5);
+    padding-inline: var(--spacing-1);
+    border-radius: var(--border-radius-small);
+    background: var(--surface-input);
+    border-block-end: var(--border-width-2) solid var(--line);
+    color: var(--ink-dim);
+  }
+
+  figure {
+    margin: 0;
+  }
+
+  img {
+    display: block;
+    max-inline-size: 100%;
+  }
+
+  search {
+    display: block;
+  }
+
+  output {
+    display: inline-block;
+    font-family: var(--font-family-mono);
+  }
+
+  hr {
+    border: 0;
+    border-block-start: var(--border-width-1) solid var(--line);
+    margin-block: var(--spacing-4);
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }

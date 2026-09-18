@@ -142,5 +142,14 @@ vite.config.ts.timestamp-*
 # Playwright
 playwright-report/
 test-results/
+docs/screenshots/*.tmp
+
+# Hutch / Electrobun
+.hutch/
+build/
+artifacts/
+
+# Coverage
+coverage/
 
 .DS_Store

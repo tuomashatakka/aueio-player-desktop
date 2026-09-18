@@ -1,13 +1,237 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Aüeio Player</title>
-  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="views://app/styles/main.css" />
 </head>
 <body>
-  <div id="root"></div>
+  <div class="shell">
+    <header class="titlebar electrobun-webkit-app-region-drag">
+      <button class="button icon electrobun-webkit-app-region-no-drag" aria-controls="sidebar" aria-expanded="true">☰</button>
+      <h1>aüeio</h1>
+      <search class="electrobun-webkit-app-region-no-drag"><input type="search" name="q" placeholder="Search library…" /></search>
+      <nav class="electrobun-webkit-app-region-no-drag" aria-label="Window">
+        <button class="button icon">–</button>
+        <button class="button icon">▢</button>
+        <button class="button icon">✕</button>
+      </nav>
+    </header>
+
+    <aside id="sidebar" class="sidebar">
+      <details name="sidebar" open>
+        <summary>Playback</summary>
+        <menu>
+          <li><button aria-pressed="true">Now Playing</button></li>
+          <li><button>Up Next</button></li>
+        </menu>
+      </details>
+      <details name="sidebar" open>
+        <summary>Folders</summary>
+        <ul role="tree">
+          <li role="treeitem" aria-expanded="true">Music
+            <ul role="group">
+              <li role="treeitem">Discovery</li>
+              <li role="treeitem">In Rainbows</li>
+              <li role="treeitem">To Pimp a Butterfly</li>
+            </ul>
+          </li>
+        </ul>
+      </details>
+      <details name="sidebar">
+        <summary>Playlists</summary>
+        <ul>
+          <li><button>Late Night Drive</button></li>
+          <li><button>Focus</button></li>
+          <li><button>Analysis Queue</button></li>
+        </ul>
+      </details>
+    </aside>
+
+    <main data-view="library">
+      <header>
+        <nav class="breadcrumbs" aria-label="Location">
+          <ol>
+            <li><button>Library</button></li>
+            <li><button>Discovery</button></li>
+          </ol>
+        </nav>
+        <fieldset class="segmented">
+          <legend class="sr-only">Group by</legend>
+          <label><input type="radio" name="group" checked /> Flat</label>
+          <label><input type="radio" name="group" /> Album</label>
+          <label><input type="radio" name="group" /> Artist</label>
+        </fieldset>
+      </header>
+      <table aria-rowcount="4">
+        <thead>
+          <tr>
+            <th scope="col">Title</th>
+            <th scope="col">Artist</th>
+            <th scope="col">Album</th>
+            <th scope="col">Time</th>
+            <th scope="col">Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-track-id="1" aria-selected="true" data-selected="true">
+            <td>One More Time</td>
+            <td>Daft Punk</td>
+            <td>Discovery</td>
+            <td>5:20</td>
+            <td>
+              <div class="rating">
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="false">★</button>
+                <button aria-pressed="false">★</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-track-id="2">
+            <td>15 Step</td>
+            <td>Radiohead</td>
+            <td>In Rainbows</td>
+            <td>3:58</td>
+            <td>
+              <div class="rating">
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="false">★</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-track-id="3">
+            <td>King Kunta</td>
+            <td>Kendrick Lamar</td>
+            <td>To Pimp a Butterfly</td>
+            <td>3:54</td>
+            <td>
+              <div class="rating">
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="false">★</button>
+                <button aria-pressed="false">★</button>
+                <button aria-pressed="false">★</button>
+              </div>
+            </td>
+          </tr>
+          <tr data-track-id="4">
+            <td>Weird Fishes / Arpeggi</td>
+            <td>Radiohead</td>
+            <td>In Rainbows</td>
+            <td>5:18</td>
+            <td>
+              <div class="rating">
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+                <button aria-pressed="true">★</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </main>
+
+    <footer class="player">
+      <section class="player" data-mode="default" data-lyrics="false">
+        <figure class="cover"><img src="" alt="" loading="lazy" decoding="async" /></figure>
+        <div class="player-info">
+          <p class="truncate">One More Time</p>
+          <p class="truncate">Daft Punk — Discovery</p>
+        </div>
+        <div class="waveform">
+          <svg viewbox="0 0 100 40" preserveaspectratio="none">
+            <path class="wf-unplayed" d="M0 20 L100 20 L100 40 L0 40 Z"></path>
+            <path class="wf-played" d="M0 20 L100 20 L100 40 L0 40 Z"></path>
+          </svg>
+          <input type="range" min="0" max="100" value="38" aria-label="Seek" />
+        </div>
+        <menu class="transport">
+          <li><button aria-pressed="false">⇄</button></li>
+          <li><button>⏮</button></li>
+          <li><button class="play">⏵</button></li>
+          <li><button>⏭</button></li>
+          <li><button data-repeat="off">↻</button></li>
+        </menu>
+      </section>
+    </footer>
+  </div>
+
+  <!--
+    Same component, portaled: the expanded/overlay copy of the player.
+    Closed by default (`popover="manual"`, never opened here), so its
+    analysis-mode-only children (chord lane, readout, frequency matrix,
+    lyrics) are left for L8 to fill in once the React component's real
+    grid placement for `[data-mode='analysis']` lands — see AGENTS.md.
+  -->
+  <section class="player" data-expanded data-mode="default" data-lyrics="false" popover="manual">
+    <figure class="cover"><img src="" alt="" loading="lazy" decoding="async" /></figure>
+    <div class="player-info">
+      <p class="truncate">One More Time</p>
+      <p class="truncate">Daft Punk — Discovery</p>
+    </div>
+    <div class="waveform">
+      <svg viewbox="0 0 100 40" preserveaspectratio="none">
+        <path class="wf-unplayed" d="M0 20 L100 20 L100 40 L0 40 Z"></path>
+        <path class="wf-played" d="M0 20 L100 20 L100 40 L0 40 Z"></path>
+      </svg>
+      <input type="range" min="0" max="100" value="38" aria-label="Seek" />
+    </div>
+    <menu class="transport">
+      <li><button aria-pressed="false">⇄</button></li>
+      <li><button>⏮</button></li>
+      <li><button class="play">⏵</button></li>
+      <li><button>⏭</button></li>
+      <li><button data-repeat="off">↻</button></li>
+    </menu>
+  </section>
+
+  <dialog class="settings">
+    <form>
+      <fieldset>
+        <legend>Appearance</legend>
+        <label>Theme
+          <select>
+            <option>Auto</option>
+            <option>Dark</option>
+            <option>Light</option>
+          </select>
+        </label>
+      </fieldset>
+    </form>
+  </dialog>
+
+  <dialog class="tag-editor">
+    <form method="dialog">
+      <fieldset>
+        <legend>Tags</legend>
+        <label>Title <input type="text" value="One More Time" /></label>
+        <label>Artist <input type="text" value="Daft Punk" /></label>
+      </fieldset>
+      <details>
+        <summary>More</summary>
+        <label>Album <input type="text" value="Discovery" /></label>
+      </details>
+    </form>
+  </dialog>
+
+  <section class="dsp" popover="manual">
+    <div class="eq-faders">
+      <div class="eq-fader"><input type="range" min="-12" max="12" value="0" /><span class="eq-value">0 dB</span></div>
+      <div class="eq-fader"><input type="range" min="-12" max="12" value="2" /><span class="eq-value">2 dB</span></div>
+      <div class="eq-fader"><input type="range" min="-12" max="12" value="-1" /><span class="eq-value">−1 dB</span></div>
+    </div>
+  </section>
+
+  <menu class="context" popover></menu>
+
   <script type="module" src="index.js"></script>
 </body>
 </html>

@@ -1,36 +1,40 @@
 {
   "name": "aueio-player-desktop",
-  "version": "0.1.0",
-  "description": "A beautiful, minimal cross-platform audio player",
+  "version": "0.2.0",
+  "type": "module",
+  "private": true,
   "scripts": {
-    "dev": "electrobun dev --watch",
-    "build": "electrobun build",
-    "pretest": "bun build src/app/index.tsx --outfile src/app/index.js --bundle --target browser",
-    "test": "npx playwright test",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix"
+    "dev": "hutch electrobun dev --watch",
+    "build": "hutch electrobun build --env=dev",
+    "build:stable": "hutch electrobun build --env=stable",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test tests/unit",
+    "build:web": "bun scripts/build-web.ts",
+    "serve:web": "bun scripts/serve-web.ts",
+    "test:e2e": "bun run build:web && playwright test --pass-with-no-tests",
+    "screenshots": "bun run build:web && bun scripts/screenshots.ts",
+    "check": "bun run lint && bun run typecheck && bun run test"
   },
   "dependencies": {
-    "electrobun": "^1.15.1",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "electrobun": "^2.0.1",
+    "react": "^19.2",
+    "react-dom": "^19.2",
+    "music-metadata": "^11.15"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
-    "@stylistic/eslint-plugin": "^5.10.0",
+    "@playwright/test": "1.56.1",
+    "@tuomashatakka/eslint-config": "4.1.0",
     "@types/bun": "latest",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.183.1",
-    "@typescript-eslint/eslint-plugin": "^8.57.0",
-    "eslint-plugin-functional": "^9.0.4",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-omit-unnecessary": "^0.0.3",
-    "eslint-plugin-unicorn": "^63.0.0",
-    "globals": "^17.4.0",
-    "typescript-eslint": "^8.57.0"
+    "@types/react": "^19.2",
+    "@types/react-dom": "^19.2",
+    "eslint": "^10.4",
+    "eslint-plugin-import-x": "^4.17",
+    "globals": "^16",
+    "typescript": "^5.9"
   },
-  "patchedDependencies": {
-    "electrobun@1.15.1": "patches/electrobun@1.15.1.patch"
-  }
+  "trustedDependencies": [
+    "unrs-resolver"
+  ]
 }

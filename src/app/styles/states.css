@@ -1,40 +1,90 @@
-/**
- * State Styles — audioblocks-design-system
+/* Cross-cutting attribute states: aria-busy, data-loading, focus-visible, reduced motion. */
+
+/*
+ * `var()` here resolves against tokens declared in tokens.css, but
+ * `@eslint/css`'s `css/no-invalid-properties` only sees declarations
+ * inside the file it is currently linting (files are linted
+ * independently, `@import` is not inlined) — so every reference to a
+ * tokens.css custom property reads as "unknown" here even though it
+ * is the One Token Contract's single declaration. allowUnknownVariables
+ * keeps the rule checking real property/value validity in this file
+ * while accepting that.
  */
+/* eslint css/no-invalid-properties: ["error", { "allowUnknownVariables": true }] */
 
 @layer states {
-
-  [data-state="success"], [data-variant="success"] { --_state-color: var(--success); --_state-bg: var(--success-muted); }
-  [data-state="warning"], [data-variant="warning"] { --_state-color: var(--warning); --_state-bg: var(--warning-muted); }
-  [data-state="error"], [data-state="danger"], [data-variant="danger"], [data-error], [aria-invalid="true"] { --_state-color: var(--danger); --_state-bg: var(--danger-muted); }
-  [data-state="info"], [data-variant="info"] { --_state-color: var(--info); --_state-bg: var(--info-muted); }
+  [aria-busy='true'] {
+    cursor: progress;
+    opacity: 0.7;
+  }
 
   [data-loading] {
     position: relative;
+    color: transparent;
     pointer-events: none;
-    opacity: 0.7;
+
     &::after {
-      content: "";
+      content: '';
       position: absolute;
-      inset: 0; margin: auto;
-      width: 16px; height: 16px;
-      border: 2px solid transparent;
-      border-top-color: currentColor;
-      border-radius: var(--radius-full);
-      animation: spin 0.6s linear infinite;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(
+        90deg,
+        var(--surface-hover) 25%,
+        var(--surface-input) 37%,
+        var(--surface-hover) 63%
+      );
+      background-size: 400% 100%;
+      animation: shimmer 1.4s ease-in-out infinite;
     }
   }
 
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  :disabled, [disabled], [aria-disabled="true"] {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
+  [data-selected='true'] {
+    background: var(--accent-muted);
   }
 
-  [data-active], [aria-selected="true"], [aria-pressed="true"] {
-    --_state-color: var(--accent);
-    --_state-bg: var(--accent-muted);
+  :focus-visible {
+    outline: 0;
+    box-shadow: var(--focus-ring);
+  }
+
+  [hidden] {
+    display: none;
+  }
+
+  /*
+   * `base.css`'s `[popover]` block only animates opacity/scale — closing
+   * still relies on the UA stylesheet's `display: none` default. Author
+   * rules always win over UA ones regardless of specificity, so a later
+   * class selector that sets `display` unconditionally (`section.player`
+   * in `views.css`, which the "One DOM" invariant makes true of both the
+   * expanded-overlay *wrapper* and the `Player` component's own root —
+   * both carry `.player`) silently reopens a closed popover's layout and
+   * leaves it intercepting pointer events. `states` is the last layer that
+   * still loses to nothing but `utilities`, so this wins back the closed
+   * state without touching `views.css`'s open-state layout rules.
+   */
+  [popover]:not(:popover-open) {
+    display: none;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 1ms;
+      animation-iteration-count: 1;
+      transition-duration: 1ms;
+      scroll-behavior: auto;
+    }
   }
 }

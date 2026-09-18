@@ -5,12 +5,13 @@
     "moduleResolution": "bundler",
     "strict": true,
     "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["bun-types"],
-    "skipLibCheck": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    "skipLibCheck": true
   },
-  "include": ["src/**/*", "electrobun.config.ts"],
-  "exclude": ["node_modules", "build"]
+  "include": ["src", "tests", "electrobun.config.ts"],
+  "exclude": ["node_modules", "build", ".hutch"]
 }

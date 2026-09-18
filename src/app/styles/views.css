@@ -1,0 +1,337 @@
+/* One root per screen: library, settings, tag editor, dsp. */
+
+/*
+ * `var()` here resolves against tokens declared in tokens.css, but
+ * `@eslint/css`'s `css/no-invalid-properties` only sees declarations
+ * inside the file it is currently linting (files are linted
+ * independently, `@import` is not inlined) — so every reference to a
+ * tokens.css custom property reads as "unknown" here even though it
+ * is the One Token Contract's single declaration. allowUnknownVariables
+ * keeps the rule checking real property/value validity in this file
+ * while accepting that.
+ */
+/* eslint css/no-invalid-properties: ["error", { "allowUnknownVariables": true }] */
+
+@layer views {
+  main[data-view='library'] {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+    min-block-size: 0;
+
+    > header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex: none;
+      gap: var(--spacing-2);
+      padding-block: var(--spacing-2);
+      padding-inline: var(--spacing-3);
+      border-block-end: var(--border-width-1) solid var(--line);
+    }
+
+    /*
+     * `table` used to carry `flex: 1`, forcing the table's own block-size to
+     * fill whatever room `main` had left. A handful of rows against a tall
+     * window is exactly the "extra space distributed across rows" case the
+     * table height algorithm defines — every `<tr>` grew to fill it, which
+     * is what pushed rows to ~300px instead of `--row-h`. The scrollable
+     * area is `main` itself (`overflow-block: auto`, set on the plain
+     * `main` selector in layout.css); the table stays sized by its content
+     * so each row keeps `--row-h`, and `thead th`'s `position: sticky`
+     * (base.css) sticks to `main`'s own scrollport.
+     */
+    table {
+      flex: none;
+      inline-size: 100%;
+    }
+  }
+
+  main[data-view='settings'] {
+    overflow-block: auto;
+    padding: var(--spacing-4);
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-6);
+      max-inline-size: 48rem;
+    }
+
+    fieldset {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+  }
+
+  dialog.tag-editor {
+    inline-size: min(90vi, 32rem);
+    padding: var(--spacing-4);
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+
+    fieldset {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-3);
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+      }
+    }
+
+    details {
+      margin-block-start: var(--spacing-2);
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-1);
+        margin-block-start: var(--spacing-2);
+      }
+    }
+  }
+
+  /*
+   * The footer bar's layout. `Player` renders the identical markup inside
+   * the expanded overlay too (AGENTS.md L8 "One DOM"), so every rule in
+   * this block also reaches that copy unless the more specific
+   * `section.player[data-expanded] > section.player` block below overrides
+   * it — that block is what turns this same markup into the full-window
+   * Now Playing layout.
+   */
+  /*
+   * `:not([data-expanded])` matters here: the expanded overlay's own
+   * wrapper (`section.player[data-expanded]` in layout.css — the popover
+   * itself) carries the same `.player` class as `Player`'s root (AGENTS.md
+   * L8 "One DOM" — both copies, plus this wrapper, read `.player`), so a
+   * bare `section.player` selector matches it too. `views` outranks
+   * `layout` in the layer order (main.css), so without this exclusion the
+   * bar's `block-size: var(--player-bar-h)` and four-column grid would win
+   * over the wrapper's full-viewport sizing below regardless of the
+   * wrapper's extra attribute selector — layer order beats specificity.
+   */
+  section.player:not([data-expanded]) {
+    display: grid;
+    grid-template-areas: 'art info transport waveform';
+    grid-template-columns: var(--cover-sm) auto 1fr auto;
+    align-items: center;
+    gap: var(--spacing-3);
+    block-size: var(--player-bar-h);
+    padding-inline: var(--spacing-3);
+    overflow: hidden;
+
+    .cover {
+      grid-area: art;
+      inline-size: var(--cover-sm);
+      block-size: var(--cover-sm);
+      transition:
+        transform var(--duration-slow) var(--ease-emphasis),
+        opacity var(--duration-slow) var(--ease-emphasis);
+    }
+
+    .player-info {
+      grid-area: info;
+      min-inline-size: 0;
+      max-inline-size: 14rem;
+    }
+
+    .transport {
+      grid-area: transport;
+    }
+
+    .waveform {
+      grid-area: waveform;
+      inline-size: 10rem;
+    }
+
+    /*
+     * `.player-content` (the chord lane, readout and frequency-matrix
+     * wallpaper) and `.lyrics` have no grid area in the bar's four-column
+     * template above — a merely collapsed copy of either is still a grid
+     * item, auto-places into an implicit row/column and adds this row's
+     * `gap`, which is what once blew the 72px bar out to ~300px. `display:
+     * none` here is a structural, per-tier hide (bar vs. the overlay
+     * below), not the mode/lyrics *state* toggle within one tier — that
+     * stays opacity/transform-only, never a gate on the element itself.
+     */
+    .player-content,
+    .lyrics {
+      display: none;
+    }
+
+    /*
+     * AGENTS.md's "Title, seek bar and transport stay mounted and visible
+     * in every mode and every tier" rules out hiding the whole section —
+     * `visibility: hidden` here used to take the transport and the
+     * expand/lyrics/mode controls out with it. Only the cover and the
+     * (empty) title/artist text dim; everything actionable stays visible
+     * and reachable.
+     */
+    &[data-empty] {
+      .cover,
+      .player-info {
+        opacity: 0.4;
+      }
+    }
+  }
+
+  /*
+   * The expanded copy: same markup, a full-window layout. Cover at ~40%
+   * inline-size, title/artist/album beside it, the waveform and transport
+   * below spanning the full width. `.player-content` shares the cover/info
+   * row (`grid-column: 1 / -1; grid-row: 1`, not a named area, so it
+   * overlaps rather than adding a track) and fades in for
+   * `[data-mode='analysis']` while the cover fades up and out — the
+   * frequency-matrix mesh sits behind the chord lane and readout as
+   * wallpaper. `.lyrics` becomes a trailing panel for `[data-lyrics='true']`.
+   */
+  section.player[data-expanded] > section.player {
+    grid-template-areas:
+      'art info'
+      'waveform waveform'
+      'transport transport';
+    grid-template-columns: 40% 1fr;
+    grid-template-rows: 1fr auto auto;
+    gap: var(--spacing-6) var(--spacing-8);
+    block-size: 100%;
+    padding: var(--spacing-8);
+
+    .cover {
+      inline-size: 100%;
+      block-size: auto;
+      max-block-size: 60vb;
+    }
+
+    .player-info {
+      position: relative;
+      z-index: 1;
+      max-inline-size: none;
+    }
+
+    .waveform {
+      inline-size: 100%;
+      block-size: 2.5rem;
+    }
+
+    .player-content {
+      position: relative;
+      display: grid;
+      grid-column: 1 / -1;
+      grid-row: 1;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: var(--spacing-4);
+      min-block-size: 0;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity var(--duration-slow) var(--ease-emphasis);
+    }
+
+    .frequency-matrix {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .chord-lane,
+    .readout {
+      position: relative;
+      z-index: 1;
+    }
+
+    .lyrics {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      justify-self: end;
+      inline-size: min(24rem, 40%);
+      block-size: 100%;
+      margin: calc(-1 * var(--spacing-8));
+      padding: var(--spacing-8);
+      overflow-block: auto;
+      background: var(--surface-raised);
+      border-inline-start: var(--border-width-1) solid var(--line);
+      transform: translateX(100%);
+      transition: transform var(--duration-slow) var(--ease-emphasis);
+    }
+
+    &[data-mode='analysis'] {
+      .cover {
+        transform: translateY(calc(-1 * var(--spacing-8)));
+        opacity: 0;
+      }
+
+      .player-content {
+        opacity: 1;
+      }
+    }
+
+    &[data-lyrics='true'] .lyrics {
+      transform: translateX(0);
+    }
+  }
+
+  section.dsp {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4);
+
+    .dsp-body {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        'curve curve'
+        'faders limiter';
+      gap: var(--spacing-4) var(--spacing-6);
+      align-items: start;
+      /*
+       * A grid track's automatic minimum size is its content's min-content
+       * size unless told otherwise — ten faders' combined min-content width
+       * was winning over the panel's own `inline-size`, so `.dsp-body`
+       * (and the `1fr` track it hands to `.eq-faders`) grew past the panel
+       * and out past its trailing edge instead of the faders shrinking to
+       * fit. `min-inline-size: 0` opts back into shrinking.
+       */
+      min-inline-size: 0;
+    }
+
+    .eq-curve {
+      grid-area: curve;
+    }
+
+    .eq-faders {
+      grid-area: faders;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--spacing-1);
+      min-inline-size: 0;
+    }
+
+    fieldset {
+      grid-area: limiter;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+      align-self: start;
+      inline-size: 12rem;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-2);
+      }
+    }
+  }
+}
