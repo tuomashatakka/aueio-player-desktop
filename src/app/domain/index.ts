@@ -1,0 +1,17 @@
+/** Barrel for every domain module. See AGENTS.md L3 and docs/plans/desktop-audio-migration.md §4. */
+
+export * from './Album'
+export * from './Analysis'
+export * from './Artist'
+export * from './color'
+export * from './drag'
+export * from './FolderNode'
+export * from './grouping'
+export * from './PlaybackState'
+export * from './Playlist'
+export * from './pitch'
+export * from './Queue'
+export * from './Settings'
+export * from './TagPatch'
+export * from './time'
+export * from './Track'
