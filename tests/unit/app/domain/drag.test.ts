@@ -1,3 +1,4 @@
+import type { Track } from '../../../../src/app/domain/Track'
 import { describe, expect, test } from 'bun:test'
 import { tracksForPayload, Track } from '../../../../src/app/domain'
 import type { DragPayload } from '../../../../src/app/domain'
@@ -18,7 +19,7 @@ function track (path: string, artist = 'Artist', album = 'Album') {
 
 const pick = (...indexes: number[]) =>
   indexes.map(index =>
-    tracks[index]).filter(Boolean)
+    tracks[index]!)
 
 describe('tracksForPayload', () => {
   test('kind "tracks" resolves the listed ids, in `tracks` order', () => {
