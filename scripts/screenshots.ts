@@ -108,6 +108,10 @@ async function captureMainScreens (page: Page, suffix: string): Promise<void> {
 
   if (suffix === '')
     await attempt(page, 'tag-editor.png', async () => {
+      // Earlier shots leave the expanded player open and the shell inert; start clean.
+      await page.reload()
+      await page.waitForSelector('tbody tr[data-track-id]', { timeout: TIMEOUT })
+
       const row = page.locator('tbody tr[data-track-id]').first()
       await row.click({ timeout: TIMEOUT })
       await row.focus()

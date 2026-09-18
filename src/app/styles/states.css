@@ -52,6 +52,22 @@
     display: none;
   }
 
+  /*
+   * `base.css`'s `[popover]` block only animates opacity/scale — closing
+   * still relies on the UA stylesheet's `display: none` default. Author
+   * rules always win over UA ones regardless of specificity, so a later
+   * class selector that sets `display` unconditionally (`section.player`
+   * in `views.css`, which the "One DOM" invariant makes true of both the
+   * expanded-overlay *wrapper* and the `Player` component's own root —
+   * both carry `.player`) silently reopens a closed popover's layout and
+   * leaves it intercepting pointer events. `states` is the last layer that
+   * still loses to nothing but `utilities`, so this wins back the closed
+   * state without touching `views.css`'s open-state layout rules.
+   */
+  [popover]:not(:popover-open) {
+    display: none;
+  }
+
   @keyframes shimmer {
     0% {
       background-position: 100% 50%;

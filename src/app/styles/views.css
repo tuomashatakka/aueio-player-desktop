@@ -100,8 +100,19 @@
       transition: transform var(--duration-slow) var(--ease-emphasis);
     }
 
+    /*
+     * AGENTS.md's "Title, seek bar and transport stay mounted and visible
+     * in every mode and every tier" rules out hiding the whole section —
+     * `visibility: hidden` here used to take the transport and the
+     * expand/lyrics/mode controls out with it. Only the cover and the
+     * (empty) title/artist text dim; everything actionable stays visible
+     * and reachable.
+     */
     &[data-empty] {
-      visibility: hidden;
+      .cover,
+      .player-info {
+        opacity: 0.4;
+      }
     }
 
     &[data-mode='analysis'] {

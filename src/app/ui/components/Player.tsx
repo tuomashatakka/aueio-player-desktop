@@ -60,15 +60,15 @@ export function Player ({ expanded }: PlayerProps): ReactElement {
 
       <menu>
         <li>
-          <button aria-pressed={ mode === 'analysis' } onClick={ toggleMode }>♪</button>
+          <button aria-label="Chord analysis view" aria-pressed={ mode === 'analysis' } onClick={ toggleMode }>♪</button>
         </li>
 
         <li>
-          <button aria-pressed={ lyricsOpen } onClick={ toggleLyrics }>Aa</button>
+          <button aria-label="Lyrics" aria-pressed={ lyricsOpen } onClick={ toggleLyrics }>Aa</button>
         </li>
 
         <li>
-          <button aria-pressed={ isOverlayOpen } onClick={ toggleExpanded }>⤢</button>
+          <button aria-label="Expand player" aria-pressed={ isOverlayOpen } onClick={ toggleExpanded }>⤢</button>
         </li>
       </menu>
     </div>

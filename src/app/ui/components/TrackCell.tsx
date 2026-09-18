@@ -16,7 +16,7 @@ function cellContent (track: Track, columnKey: ColumnKey): ReactElement | string
   switch (columnKey) {
     case 'art':
       return <figure className="cover">
-        <img src="" alt="" loading="lazy" decoding="async" />
+        <img data-art-id={ track.artId ?? '' } alt="" loading="lazy" decoding="async" />
       </figure>
     case 'index':
       return ''

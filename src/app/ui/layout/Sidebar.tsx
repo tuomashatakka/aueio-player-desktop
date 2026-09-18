@@ -15,6 +15,8 @@ import { FolderTree, flattenFolders } from './FolderTree'
 export function Sidebar (): ReactElement {
   const stores = useStores()
 
+  const view      = useStore(stores.ui, state =>
+    state.view)
   const scope     = useStore(stores.ui, state =>
     state.scope)
   const tree      = useStore(stores.library, selectFolderTree)
@@ -99,7 +101,23 @@ export function Sidebar (): ReactElement {
   }
 
   function openSettings (): void {
+    // `overlay` (DSP, the tag editor, the expanded player) is orthogonal to
+    // `view` in the reducer, and a `popover="manual"` element has no
+    // light-dismiss — so without this, an overlay left open (most often
+    // DSP, opened just above) keeps intercepting pointer events over
+    // whatever `<main>` swaps to underneath it.
+    stores.ui.dispatch({ type: 'ui/overlayClosed' })
     stores.ui.dispatch({ type: 'ui/viewChanged', view: 'settings' })
+  }
+
+  // Settings replaces `<main>` outright (it's a view, not a modal — see
+  // `Shell`'s docstring), and `Breadcrumbs`' "Library" crumb is part of
+  // `Library` itself, so it unmounts along with everything else `<main>`
+  // was showing. Without a nav item that survives the swap, Settings was a
+  // dead end reachable only by the `mod+l` shortcut.
+  function openLibrary (): void {
+    stores.ui.dispatch({ type: 'ui/overlayClosed' })
+    stores.ui.dispatch({ type: 'ui/viewChanged', view: 'library' })
   }
 
   return <aside id="sidebar" className="sidebar">
@@ -108,7 +126,13 @@ export function Sidebar (): ReactElement {
 
       <menu>
         <li>
-          <button aria-pressed={ scope.list === 'queue' } onClick={ onNowPlayingClick }>Now Playing</button>
+          {/*
+            `aria-label` (not a text change) so the visible "Now Playing"
+            label is untouched but the accessible name no longer overlaps
+            `Player`'s "Expand player" control — both otherwise match a
+            loose "now playing" screenshot/test query aimed at the latter.
+          */}
+          <button aria-label="Playback queue" aria-pressed={ scope.list === 'queue' } onClick={ onNowPlayingClick }>Now Playing</button>
         </li>
 
         <li>
@@ -138,11 +162,15 @@ export function Sidebar (): ReactElement {
     <footer>
       <menu>
         <li>
+          <button className="button ghost" aria-pressed={ view === 'library' } onClick={ openLibrary }>Library</button>
+        </li>
+
+        <li>
           <button className="button ghost" onClick={ openDsp }>DSP</button>
         </li>
 
         <li>
-          <button className="button ghost" onClick={ openSettings }>Settings</button>
+          <button className="button ghost" aria-pressed={ view === 'settings' } onClick={ openSettings }>Settings</button>
         </li>
       </menu>
     </footer>

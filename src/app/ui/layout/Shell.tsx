@@ -84,7 +84,20 @@ export function Shell (): ReactElement {
         {view === 'library' ? <Library /> : <SettingsView />}
       </main>
 
-      <footer className="player">
+      {/*
+        `inert` (native focus/pointer suppression, implies `aria-hidden` per
+        spec) plus an explicit `aria-hidden` — belt and braces, since this
+        engine's role-query tooling was still walking into the `inert`
+        subtree on its own — when the overlay copy is open: the "One DOM"
+        invariant means this footer copy renders the identical controls
+        (same accessible names) as the overlay's, just visually buried under
+        its top-layer popover. Left reachable, they're both a keyboard trap
+        and, in `scripts/screenshots.ts`, a same-named element role queries
+        resolve to ahead of the one actually on screen. Left visible (no
+        `display`/`visibility` change), `footer .waveform` stays a valid
+        screenshot target throughout.
+      */}
+      <footer className="player" aria-hidden={ overlay === 'player' || undefined } inert={ overlay === 'player' }>
         <Player expanded={ false } />
       </footer>
     </div>

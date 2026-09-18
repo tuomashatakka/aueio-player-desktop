@@ -104,13 +104,46 @@
     }
   }
 
+  /*
+   * `inset: 0` used to put this over the titlebar and sidebar too, so once
+   * expanded there was no way back to either short of the player's own
+   * controls — the window's minimize/maximize/close buttons and every
+   * sidebar door (folders, playlists, DSP, Settings) were unreachable until
+   * this closed again. Docked under the titlebar and past the sidebar, it
+   * still fills the rest of the window (replacing `<main>` and the footer
+   * player bar), which is what "expanded" means, without taking the whole
+   * shell's chrome down with it.
+   */
   section.player[data-expanded] {
     position: fixed;
-    inset: 0;
+    inset-block: var(--titlebar-h) 0;
+    inset-inline: var(--sidebar-w) 0;
     margin: 0;
-    inline-size: 100%;
-    block-size: 100%;
+    inline-size: auto;
+    block-size: auto;
     max-inline-size: none;
     max-block-size: none;
+  }
+
+  /*
+   * No `inset`/sizing here at all used to leave this popover's default
+   * placement covering almost the entire viewport — sidebar included, so
+   * once open it blocked every other sidebar door (Settings, the folder
+   * tree) rather than just standing in front of `<main>`. Docked to the
+   * trailing edge, under the titlebar and above the footer player, it
+   * leaves the titlebar, sidebar and footer reachable while it's open.
+   */
+  section.dsp {
+    position: fixed;
+    inset-block: var(--titlebar-h) var(--player-bar-h);
+    inset-inline-end: 0;
+    margin: 0;
+    inline-size: min(26rem, 100%);
+    block-size: auto;
+    max-inline-size: none;
+    max-block-size: none;
+    overflow-block: auto;
+    border-inline-start: var(--border-width-1) solid var(--line);
+    border-radius: 0;
   }
 }

@@ -60,6 +60,7 @@ export function TrackCard ({ track, index, selected, context }: TrackCardProps):
     aria-selected={ selected }
     data-track-id={ track.id }
     data-selected={ selected }
+    tabIndex={ -1 }
     draggable
     onClick={ onClick }
     onContextMenu={ onContextMenu }
@@ -67,7 +68,7 @@ export function TrackCard ({ track, index, selected, context }: TrackCardProps):
     onDragStart={ onDragStart }>
     <article>
       <figure className="cover">
-        <img src="" alt="" loading="lazy" decoding="async" />
+        <img data-art-id={ track.artId ?? '' } alt="" loading="lazy" decoding="async" />
       </figure>
 
       <p className="truncate">{track.displayTitle}</p>

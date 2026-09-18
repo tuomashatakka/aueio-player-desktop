@@ -65,6 +65,7 @@ export function TrackRow ({ track, index, selected, context }: TrackRowProps): R
     aria-selected={ selected }
     data-track-id={ track.id }
     data-selected={ selected }
+    tabIndex={ -1 }
     draggable
     onClick={ onClick }
     onContextMenu={ onContextMenu }

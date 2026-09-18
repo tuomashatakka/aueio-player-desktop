@@ -53,8 +53,18 @@ const services: Services = {
 
 startEffects(stores, services)
 
-const mount = document.querySelector('.shell main')
-if (mount)
-  createRoot(mount).render(
-    <App stores={ stores } />
-  )
+// `index.html`'s body is a static design reference (the shell markup, the
+// overlay sections, the settings/tag-editor dialogs) meant to be read, not
+// hydrated onto — it has no stable single mount point of its own, and
+// `Shell` renders that entire structure itself. Clearing the body and
+// mounting a fresh container is what makes this replacement rather than a
+// second, nested copy of every landmark.
+document.body.replaceChildren()
+
+const mount = document.createElement('div')
+mount.id    = 'root'
+document.body.append(mount)
+
+createRoot(mount).render(
+  <App stores={ stores } />
+)

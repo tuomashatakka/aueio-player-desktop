@@ -5,13 +5,17 @@
  * the `<menu class="context">` element this renders into.
  */
 import type { ReactElement } from 'react'
+import type { MenuItemJSON } from '../../../shared/dto'
 import { useStore, useStores } from '../hooks/useStore'
 
+
+/** Referentially stable fallback so the selector below never hands `useSyncExternalStore` a fresh `[]` each call. */
+const NO_ITEMS: readonly MenuItemJSON[] = []
 
 export function ContextMenu (): ReactElement {
   const stores = useStores()
   const items  = useStore(stores.ui, state =>
-    state.contextMenu?.items ?? [])
+    state.contextMenu?.items ?? NO_ITEMS)
 
   function act (actionId: string): void {
     stores.ui.dispatch({ type: 'ui/contextMenuActioned', actionId })

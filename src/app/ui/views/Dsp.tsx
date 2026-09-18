@@ -17,6 +17,10 @@ export function Dsp (): ReactElement {
   const dsp    = useStore(stores.player, state =>
     state.dsp)
 
+  function onClose (): void {
+    stores.ui.dispatch({ type: 'ui/overlayClosed' })
+  }
+
   function setGain (index: number, value: number): void {
     const gains  = dsp.eq.gains.slice()
     gains[index] = value
@@ -38,6 +42,7 @@ export function Dsp (): ReactElement {
   }
 
   return <>
+    <button className="button icon" aria-label="Close DSP" type="button" onClick={ onClose }>✕</button>
     <EqCurve gains={ dsp.eq.gains } />
 
     <div className="eq-faders">
