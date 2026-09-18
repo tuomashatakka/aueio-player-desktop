@@ -16,6 +16,9 @@ export default {
       app: {
         entrypoint: 'src/app/index.tsx',
       },
+      analysisWorker: {
+        entrypoint: 'src/app/services/analysis/analysis.worker.ts',
+      },
     },
     copy: {
       'src/app/index.html': 'views/app/index.html',
