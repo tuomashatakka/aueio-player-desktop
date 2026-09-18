@@ -238,10 +238,16 @@ config-only escape hatch for users who need Ogg.
 
 ## Release
 
-Pushing a `v*` tag runs the CI matrix (`.github/workflows/ci.yml`): lint →
+Bumping `version` in `package.json` and merging to `main` is a release: the
+`release` job runs on every push to `main`, and when no `v<version>` tag
+exists yet it creates one on the merge commit and publishes the build
+artifacts (the dev sessions' git proxy cannot push tags, hence this path).
+Pushing a `v*` tag by hand works too. Either way the CI matrix (`.github/workflows/ci.yml`) runs lint →
 typecheck → unit → Playwright e2e → build on macOS/Ubuntu/Windows via
-`bunx electrobun sync && bunx electrobun build --env=stable`, then a
-`release` job (tag pushes only) downloads every OS's build artifact and
-attaches the files under `artifacts/` to a GitHub Release via
+`bunx electrobun sync && bunx electrobun build --env=stable`, then the
+`release` job downloads every OS's build artifact and attaches the files
+under `artifacts/` (`macos-arm64-AueioPlayer.dmg`,
+`linux-x64-AueioPlayer-Setup.tar.gz`, `win-x64-AueioPlayer-Setup.zip`, plus
+`.tar.zst` update bundles and `update.json`) to the GitHub Release via
 `softprops/action-gh-release`. `README.md`'s Download section links
 `.../releases/latest`.
