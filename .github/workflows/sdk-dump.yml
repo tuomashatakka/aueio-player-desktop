@@ -2,6 +2,9 @@ name: SDK dump
 
 on:
   workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['.github/workflows/sdk-dump.yml', 'electrobun.config.ts', 'package.json']
 
 jobs:
   dump:
