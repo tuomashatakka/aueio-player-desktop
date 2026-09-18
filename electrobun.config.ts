@@ -3,7 +3,7 @@ import type { ElectrobunConfig } from 'electrobun'
 
 export default {
   app: {
-    name:       'Aüeio Player',
+    name:       'Aueio Player',
     identifier: 'dev.aueio.player',
     version:    '0.2.0',
   },
