@@ -265,9 +265,9 @@ declare module 'electrobun/view' {
   }
 
   export class Electroview<Rpc = RPCHandle<SchemaShape>> {
+    static defineRPC<Schema extends SchemaShape> (config: RPCDefineConfig<Schema>): RPCHandle<Schema>
+
     rpc: Rpc
     constructor (config?: { rpc?: Rpc })
-
-    static defineRPC<Schema extends SchemaShape> (config: RPCDefineConfig<Schema>): RPCHandle<Schema>
   }
 }
