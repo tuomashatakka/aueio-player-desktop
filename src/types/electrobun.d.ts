@@ -54,34 +54,79 @@ declare module 'electrobun/main' {
     id: number
     constructor (options: BrowserWindowOptions)
     close (): void
+    minimize (): void
+    maximize (): void
     setSize (width: number, height: number): void
   }
 
+  // Every handler in `defineRPC`'s `requests` map takes that request's own
+  // `params` and returns its own `response` (sync or async); `send` mirrors
+  // the `webview` side's `messages`, one sender per message name — this is
+  // what lets `rpc.send['scan.batch'](payload)` type-check against
+  // `AppRPC['webview']['messages']['scan.batch']`.
+  type RPCRequestHandlers<Requests> = {
+    [K in keyof Requests]: Requests[K] extends { params: infer P, response: infer R }
+      ? (params: P) => R | Promise<R>
+      : never
+  }
+
+  type RPCMessageHandlers<Messages> = {
+    [K in keyof Messages]: (payload: Messages[K]) => void
+  }
+
   type BrowserViewType = {
-    defineRPC<Schema> (config: {
+    defineRPC<Schema extends {
+      bun:     { requests: Record<string, unknown>, messages: Record<string, unknown> }
+      webview: { requests: Record<string, unknown>, messages: Record<string, unknown> }
+    }> (config: {
       maxRequestTime?: number
       handlers: {
-        requests?: Record<string, (params: unknown) => unknown>
-        messages?: Record<string, (payload: unknown) => void>
+        requests?: RPCRequestHandlers<Schema['bun']['requests']>
+        messages?: RPCMessageHandlers<Schema['bun']['messages']>
       }
-    }): unknown
+    }): { send: RPCMessageHandlers<Schema['webview']['messages']> }
   }
 
   export const BrowserView: BrowserViewType
 
+  export interface MenuItemTemplate {
+    label?:       string
+    role?:        string
+    accelerator?: string
+    action?:      string
+    type?:        'separator'
+    enabled?:     boolean
+    checked?:     boolean
+    submenu?:     MenuItemTemplate[]
+  }
+
   type ApplicationMenuType = {
-    setApplicationMenu (template: unknown[]): void
+    setApplicationMenu (template: MenuItemTemplate[]): void
   }
 
   export const ApplicationMenu: ApplicationMenuType
 
   type ContextMenuType = {
-    show (items: unknown[]): Promise<unknown>
+    showContextMenu (items: unknown[]): void
   }
 
   export const ContextMenu: ContextMenuType
 
-  export const Utils: Record<string, (...args: unknown[]) => unknown>
+  export interface OpenFileDialogOptions {
+    startingFolder?:          string
+    allowedFileTypes?:        string
+    canChooseFiles?:          boolean
+    canChooseDirectory?:      boolean
+    allowsMultipleSelection?: boolean
+  }
+
+  type UtilsType = {
+    openFileDialog:   (options: OpenFileDialogOptions) => Promise<string[] | null>
+    openExternal:     (url: string) => void
+    showItemInFolder: (path: string) => void
+  }
+
+  export const Utils: UtilsType
 
   type PATHSType = {
     userData: string
@@ -90,9 +135,19 @@ declare module 'electrobun/main' {
 
   export const PATHS: PATHSType
 
+  // Known event names get a typed payload; anything else falls back to the
+  // permissive signature so a not-yet-modelled event still compiles.
+  type ElectrobunEventMap = {
+    'application-menu-clicked': (actionId: string) => void
+    'context-menu-clicked':     (actionId: string | null) => void
+    'before-quit':              () => void
+  }
+
   type ElectrobunType = {
     events: {
+      on<K extends keyof ElectrobunEventMap> (event: K, handler: ElectrobunEventMap[K]): void
       on (event: string, handler: (...args: unknown[]) => void): void
+      off<K extends keyof ElectrobunEventMap> (event: K, handler: ElectrobunEventMap[K]): void
       off (event: string, handler: (...args: unknown[]) => void): void
     }
   }
