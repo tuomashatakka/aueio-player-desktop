@@ -1,4 +1,142 @@
 /* One root per screen: library, settings, tag editor, dsp. */
 
+/*
+ * `var()` here resolves against tokens declared in tokens.css, but
+ * `@eslint/css`'s `css/no-invalid-properties` only sees declarations
+ * inside the file it is currently linting (files are linted
+ * independently, `@import` is not inlined) — so every reference to a
+ * tokens.css custom property reads as "unknown" here even though it
+ * is the One Token Contract's single declaration. allowUnknownVariables
+ * keeps the rule checking real property/value validity in this file
+ * while accepting that.
+ */
+/* eslint css/no-invalid-properties: ["error", { "allowUnknownVariables": true }] */
+
 @layer views {
+  main[data-view='library'] {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+
+    > header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-2);
+      padding-block: var(--spacing-2);
+      padding-inline: var(--spacing-3);
+      border-block-end: var(--border-width-1) solid var(--line);
+    }
+
+    table {
+      flex: 1;
+    }
+  }
+
+  main[data-view='settings'] {
+    overflow-block: auto;
+    padding: var(--spacing-4);
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+      max-inline-size: 40rem;
+    }
+  }
+
+  dialog.tag-editor {
+    padding: var(--spacing-4);
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+
+    details {
+      margin-block-start: var(--spacing-2);
+    }
+  }
+
+  section.player {
+    display: grid;
+    grid-template-areas:
+      'art info'
+      'art progress'
+      'transport transport';
+    grid-template-columns: var(--cover-lg) 1fr;
+    align-items: center;
+    gap: var(--spacing-2) var(--spacing-3);
+    padding-block: var(--spacing-2);
+    padding-inline: var(--spacing-3);
+
+    .cover {
+      grid-area: art;
+      transition:
+        transform var(--duration-slow) var(--ease-emphasis),
+        opacity var(--duration-slow) var(--ease-emphasis);
+    }
+
+    .player-info {
+      grid-area: info;
+      min-inline-size: 0;
+    }
+
+    .waveform {
+      grid-area: progress;
+    }
+
+    .transport {
+      grid-area: transport;
+    }
+
+    .player-content {
+      transition: transform var(--duration-slow) var(--ease-emphasis);
+    }
+
+    .lyrics {
+      transform: translateX(100%);
+      transition: transform var(--duration-slow) var(--ease-emphasis);
+    }
+
+    &[data-empty] {
+      visibility: hidden;
+    }
+
+    &[data-mode='analysis'] {
+      .cover {
+        transform: translateY(calc(-1 * var(--cover-lg)));
+        opacity: 0;
+      }
+
+      .chord-lane,
+      .readout {
+        transform: translateY(calc(-1 * var(--spacing-4)));
+      }
+    }
+
+    &[data-lyrics='true'] {
+      .player-content {
+        transform: translateX(calc(-1 * var(--sidebar-w)));
+      }
+
+      .lyrics {
+        transform: translateX(0);
+      }
+    }
+  }
+
+  section.dsp {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4);
+
+    .eq-faders {
+      display: flex;
+      align-items: flex-end;
+      gap: var(--spacing-2);
+    }
+  }
 }

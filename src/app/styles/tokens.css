@@ -1,4 +1,244 @@
 /* All custom properties, @property, :root, [data-theme]. Nowhere else. */
 
+@property --accent {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #00e5d1;
+}
+
+
+@property --accent-contrast {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #04211d;
+}
+
+
+/*
+ * Art-palette tokens, driven from album artwork by `services/palette`.
+ * Registering them as `<color>`/`<number>` is what lets the whole page
+ * cross-fade between tracks with a plain `transition` below instead of
+ * animation code — an unregistered custom property can only be swapped.
+ */
+@property --art-vibrant {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+
+@property --art-muted {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+
+@property --art-dark {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+
+@property --art-light {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+
+@property --art-lum {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0.5;
+}
+
+
 @layer tokens {
+  /*
+   * Declaration order below is load-bearing: `css/no-invalid-properties`
+   * resolves `var()` against custom properties it has already seen earlier
+   * in this same rule, so every token used by another token (--accent,
+   * --duration-slow, --ease, --ink …) is declared before its first use.
+   */
+  :root {
+    /* ─── primitives: neutral scale, cool near-black in dark ──────────── */
+
+    --color-neutral-50: #f4f4f8;
+    --color-neutral-100: #eceef3;
+    --color-neutral-200: #dadde5;
+    --color-neutral-300: #c5c5d0;
+    --color-neutral-400: #8888a0;
+    --color-neutral-500: #6b6b80;
+    --color-neutral-600: #4a4a5c;
+    --color-neutral-700: #2a2a35;
+    --color-neutral-800: #1a1a22;
+    --color-neutral-900: #111118;
+    --color-neutral-950: #0b0b10;
+
+    /* ─── primitives: primary scale, teal-cyan accent family ───────────── */
+
+    --color-primary-50: #e6fffb;
+    --color-primary-100: #b3fff2;
+    --color-primary-200: #80ffe9;
+    --color-primary-300: #4dffe0;
+    --color-primary-400: #1affd6;
+    --color-primary-500: #00e5d1;
+    --color-primary-600: #00b8a8;
+    --color-primary-700: #008a7e;
+    --color-primary-800: #005c54;
+    --color-primary-900: #002e2a;
+
+    /* ─── primitives: semantic accents and base ─────────────────────────── */
+
+    --color-semantic-success-50: #e8fff3;
+    --color-semantic-success-500: #5dffa0;
+    --color-semantic-success-700: #167a44;
+    --color-semantic-warning-50: #fff8e6;
+    --color-semantic-warning-500: #ffd166;
+    --color-semantic-warning-700: #8a5f00;
+    --color-semantic-error-50: #ffe9f1;
+    --color-semantic-error-500: #ff2e7e;
+    --color-semantic-error-700: #8a0038;
+    --color-semantic-info-50: #e8f8ff;
+    --color-semantic-info-500: #5cd1ff;
+    --color-semantic-info-700: #00567e;
+    --color-base-white: #fff;
+    --color-base-black: #000;
+
+    /* ─── motion ─────────────────────────────────────────────────────────── */
+
+    --duration-fast: 120ms;
+    --duration-base: 220ms;
+    --duration-slow: 380ms;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+
+    /* ─── accent, registered above so it cross-fades between tracks ────── */
+
+    --accent: var(--color-primary-500);
+    --accent-contrast: var(--color-neutral-950);
+    --accent-muted: color-mix(in srgb, var(--accent) 14%, transparent);
+    transition:
+      --accent var(--duration-slow) var(--ease),
+      --accent-contrast var(--duration-slow) var(--ease),
+      --art-vibrant var(--duration-slow) var(--ease),
+      --art-muted var(--duration-slow) var(--ease),
+      --art-dark var(--duration-slow) var(--ease),
+      --art-light var(--duration-slow) var(--ease),
+      --art-lum var(--duration-slow) var(--ease);
+
+    /* ─── semantic roles, resolved per colour-scheme ────────────────────── */
+
+    --surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+    --surface-raised: light-dark(var(--color-base-white), var(--color-neutral-900));
+    --surface-input: light-dark(var(--color-neutral-100), var(--color-neutral-800));
+    --surface-hover: light-dark(var(--color-neutral-200), var(--color-neutral-700));
+    --ink: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+    --ink-dim: light-dark(var(--color-neutral-600), var(--color-neutral-300));
+    --ink-muted: light-dark(var(--color-neutral-500), var(--color-neutral-400));
+    --line: light-dark(rgb(0 0 0 / 8%), rgb(255 255 255 / 10%));
+    --line-hover: light-dark(rgb(0 0 0 / 18%), rgb(255 255 255 / 20%));
+    --focus-ring: 0 0 0 0.125rem var(--accent);
+
+    color-scheme: light dark;
+    /* eslint-disable-next-line css/use-baseline -- accent-color is supported by every engine desktop-audio targets (chrome146); the rule's 'newly' baseline window is stricter than this app's platform floor */
+    accent-color: var(--accent);
+
+    /* ─── type ───────────────────────────────────────────────────────────── */
+
+    --font-family-sans: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-family-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-size-xs: 0.6875rem;
+    --font-size-sm: 0.75rem;
+    --font-size-md: 0.875rem;
+    --font-size-lg: 1rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 2rem;
+    --font-size-4xl: 2.5rem;
+    --font-size-5xl: 3rem;
+    --font-size-6xl: 4rem;
+    --font-weight-hairline: 100;
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-line-height-tight: 1.1;
+    --font-line-height-base: 1.4;
+    --font-line-height-relaxed: 1.6;
+
+    /* ─── spacing, 0.25rem unit ──────────────────────────────────────────── */
+
+    --spacing-0: 0rem;
+    --spacing-px: 0.0625rem;
+    --spacing-0-5: 0.125rem;
+    --spacing-1: 0.25rem;
+    --spacing-2: 0.5rem;
+    --spacing-3: 0.75rem;
+    --spacing-4: 1rem;
+    --spacing-5: 1.25rem;
+    --spacing-6: 1.5rem;
+    --spacing-7: 1.75rem;
+    --spacing-8: 2rem;
+    --spacing-9: 2.25rem;
+    --spacing-10: 2.5rem;
+    --spacing-12: 3rem;
+    --spacing-16: 4rem;
+    --spacing-20: 5rem;
+    --spacing-24: 6rem;
+
+    /* ─── border ─────────────────────────────────────────────────────────── */
+
+    --border-width-1: 0.0625rem;
+    --border-width-2: 0.125rem;
+    --border-radius-none: 0rem;
+    --border-radius-small: 0.25rem;
+    --border-radius-base: 0.5rem;
+    --border-radius-large: 1rem;
+    --border-radius-full: 62.5rem;
+
+    /* ─── shadow ─────────────────────────────────────────────────────────── */
+
+    --shadow-shallow: 0 0.0625rem 0.125rem rgb(0 0 0 / 35%);
+    --shadow-base: 0 0.25rem 0.75rem rgb(0 0 0 / 40%);
+    --shadow-elevated: 0 0.75rem 2rem rgb(0 0 0 / 50%);
+    --shadow-floating: 0 2rem 5rem rgb(0 0 0 / 70%);
+
+    /* ─── structural sizes ───────────────────────────────────────────────── */
+
+    --titlebar-h: 2.5rem;
+    --player-bar-h: 4.5rem;
+    --sidebar-w: 14rem;
+    --row-h: 2.5rem;
+    --row-h-compact: 1.75rem;
+    --row-h-relaxed: 4rem;
+    --cover-sm: 2.5rem;
+    --cover-lg: 6rem;
+
+    /* ─── player tokens ──────────────────────────────────────────────────── */
+
+    --chord-pps: clamp(1.75rem, 6cqi, 4rem);
+    --matrix-wallpaper: 0.38;
+    --wf-played: var(--accent);
+    --wf-unplayed: color-mix(in oklab, var(--ink) 15%, transparent);
+  }
+
+  [data-theme='dark'] {
+    color-scheme: dark;
+  }
+
+  [data-theme='light'] {
+    color-scheme: light;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --duration-fast: 1ms;
+      --duration-base: 1ms;
+      --duration-slow: 1ms;
+    }
+  }
 }

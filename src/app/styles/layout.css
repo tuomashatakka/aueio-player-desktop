@@ -1,4 +1,116 @@
 /* Structure only: the shell, titlebar, sidebar, container-query blocks. */
 
+/*
+ * `var()` here resolves against tokens declared in tokens.css, but
+ * `@eslint/css`'s `css/no-invalid-properties` only sees declarations
+ * inside the file it is currently linting (files are linted
+ * independently, `@import` is not inlined) — so every reference to a
+ * tokens.css custom property reads as "unknown" here even though it
+ * is the One Token Contract's single declaration. allowUnknownVariables
+ * keeps the rule checking real property/value validity in this file
+ * while accepting that.
+ */
+/* eslint css/no-invalid-properties: ["error", { "allowUnknownVariables": true }] */
+
 @layer layout {
+  .electrobun-webkit-app-region-drag {
+    /* eslint-disable-next-line css/no-invalid-properties -- Electrobun's window-drag hook, not a standard CSS property */
+    -webkit-app-region: drag;
+  }
+
+  .electrobun-webkit-app-region-no-drag {
+    /* eslint-disable-next-line css/no-invalid-properties -- Electrobun's window-drag hook, not a standard CSS property */
+    -webkit-app-region: no-drag;
+  }
+
+  .shell {
+    display: grid;
+    grid-template:
+      'title title' var(--titlebar-h)
+      'side main' 1fr
+      'player player' var(--player-bar-h)
+      / var(--sidebar-w) 1fr;
+    block-size: 100dvb;
+    container-type: size;
+    container-name: shell;
+
+    header.titlebar {
+      grid-area: title;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      padding-inline: var(--spacing-2);
+      block-size: var(--titlebar-h);
+    }
+
+    aside.sidebar {
+      grid-area: side;
+      inline-size: var(--sidebar-w);
+      overflow-block: auto;
+      border-inline-end: var(--border-width-1) solid var(--line);
+      transition: inline-size var(--duration-base) var(--ease);
+    }
+
+    main {
+      grid-area: main;
+      overflow-block: auto;
+      min-inline-size: 0;
+      min-block-size: 0;
+    }
+
+    footer.player {
+      grid-area: player;
+      block-size: var(--player-bar-h);
+      border-block-start: var(--border-width-1) solid var(--line);
+    }
+
+    &:has(.titlebar [aria-expanded='false']) {
+      aside.sidebar {
+        inline-size: 0;
+        overflow: hidden;
+        border-inline-end: 0;
+      }
+    }
+  }
+
+  /*
+   * Hoisted out of `.shell { … }`: this project's `@eslint/css` (css-tree
+   * 4.1.1) doesn't forward `allowNestedRules` into `@container`'s block
+   * parser the way it does for `@media`, so a selector rule nested two
+   * levels deep (`.shell { @container shell (…) { aside.sidebar {…} } }`)
+   * is a parse error under this linter even though every targeted engine
+   * runs it fine. Top-level `@container shell` blocks with `.shell`-
+   * prefixed selectors are identical CSS.
+   */
+  @container shell (max-block-size: 18.75rem) {
+    .shell {
+      grid-template:
+        'player' var(--player-bar-h)
+        / 1fr;
+    }
+
+    .shell aside.sidebar,
+    .shell main {
+      display: none;
+    }
+  }
+
+  @container shell (max-inline-size: 40rem) {
+    .shell aside.sidebar {
+      position: fixed;
+      inset-block: var(--titlebar-h) var(--player-bar-h);
+      inset-inline-start: 0;
+      box-shadow: var(--shadow-elevated);
+    }
+  }
+
+  section.player[data-expanded] {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    max-inline-size: none;
+    max-block-size: none;
+  }
 }
