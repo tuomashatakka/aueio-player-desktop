@@ -1,12 +1,10 @@
-/* Layer declaration must come first */
-@layer tokens, themes, reset, base, states, components, utilities, ui, app;
+@layer fonts, tokens, base, components, layout, views, states, utilities;
 
-@import "./tokens.css";
-@import "./themes.css";
-@import "./reset.css";
-@import "./base.css";
-@import "./states.css";
-@import "./components.css";
-@import "./utilities.css";
-@import "./ui.css";
-@import "./app.css";
+@import './fonts.css';
+@import './tokens.css';
+@import './base.css';
+@import './components.css';
+@import './layout.css';
+@import './views.css';
+@import './states.css';
+@import './utilities.css';

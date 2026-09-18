@@ -1,13 +1,35 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Aüeio Player</title>
-  <link rel="stylesheet" href="styles/main.css" />
+  <link rel="stylesheet" href="views://app/styles/main.css" />
 </head>
 <body>
-  <div id="root"></div>
+  <div class="shell">
+    <header class="titlebar electrobun-webkit-app-region-drag">
+      <button class="icon" aria-controls="sidebar" aria-expanded="true">Menu</button>
+      <h1>aüeio</h1>
+      <search><input type="search" name="q" /></search>
+      <nav aria-label="Window">Window</nav>
+    </header>
+    <aside id="sidebar" class="sidebar">
+      <details name="sidebar" open><summary>Playback</summary><menu></menu></details>
+      <details name="sidebar"><summary>Folders</summary><ul role="tree"></ul></details>
+      <details name="sidebar"><summary>Playlists</summary><ul></ul></details>
+    </aside>
+    <main data-view="library">
+      <header></header>
+      <table aria-rowcount="0"></table>
+    </main>
+    <footer class="player"><section class="player" data-mode data-lyrics></section></footer>
+  </div>
+  <section class="player" data-expanded popover="manual"></section>
+  <dialog class="settings"></dialog>
+  <dialog class="tag-editor"><form method="dialog"></form></dialog>
+  <section class="dsp" popover="manual"></section>
+  <menu class="context" popover></menu>
   <script type="module" src="index.js"></script>
 </body>
 </html>
