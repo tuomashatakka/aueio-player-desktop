@@ -6,9 +6,15 @@ export default defineConfig({
   fullyParallel: true,
   reporter:      'list',
   use:           {
+    baseURL:  'http://localhost:4173',
     headless: true,
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }},
   ],
+  webServer: {
+    command:             'bun run serve:web',
+    url:                 'http://localhost:4173/index.html',
+    reuseExistingServer: true,
+  },
 })

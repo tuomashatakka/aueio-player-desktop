@@ -11,7 +11,10 @@
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "bun test tests/unit",
-    "test:e2e": "playwright test --pass-with-no-tests",
+    "build:web": "bun scripts/build-web.ts",
+    "serve:web": "bun scripts/serve-web.ts",
+    "test:e2e": "bun run build:web && playwright test --pass-with-no-tests",
+    "screenshots": "bun run build:web && bun scripts/screenshots.ts",
     "check": "bun run lint && bun run typecheck && bun run test"
   },
   "dependencies": {
@@ -21,7 +24,7 @@
     "music-metadata": "^11.15"
   },
   "devDependencies": {
-    "@playwright/test": "^1.58",
+    "@playwright/test": "1.56.1",
     "@tuomashatakka/eslint-config": "4.1.0",
     "@types/bun": "latest",
     "@types/react": "^19.2",
