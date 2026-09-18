@@ -13,6 +13,26 @@ import { join } from 'node:path'
 const root   = join(import.meta.dir, '..')
 const outDir = join(root, 'build/web')
 
+// The npm `electrobun` package is only a bootstrap: importing `electrobun/view`
+//  outside a Hutch build throws at load time. The web harness never talks
+//  RPC (it runs on the fake gateway), so the module is replaced by a stub
+//  whose only job is to exist.
+const ELECTROBUN_VIEW_STUB = `
+export class Electroview {
+  static defineRPC () { throw new Error('electrobun/view is unavailable outside the webview') }
+}
+`
+
+const stubElectrobunView: import('bun').BunPlugin = {
+  name: 'stub-electrobun-view',
+  setup (build) {
+    build.onResolve({ filter: /^electrobun\/view$/ }, () =>
+      ({ path: 'electrobun-view-stub', namespace: 'stub' }))
+    build.onLoad({ filter: /.*/, namespace: 'stub' }, () =>
+      ({ contents: ELECTROBUN_VIEW_STUB, loader: 'js' }))
+  },
+}
+
 async function bundle (entrypoint: string, outdir: string): Promise<void> {
   const result = await Bun.build({
     entrypoints: [ join(root, entrypoint) ],
@@ -21,6 +41,7 @@ async function bundle (entrypoint: string, outdir: string): Promise<void> {
     format:      'esm',
     sourcemap:   'linked',
     naming:      'index.js',
+    plugins:     [ stubElectrobunView ],
   })
 
   if (!result.success) {
