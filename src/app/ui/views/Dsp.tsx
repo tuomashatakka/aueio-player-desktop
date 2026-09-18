@@ -43,30 +43,33 @@ export function Dsp (): ReactElement {
 
   return <>
     <button className="button icon" aria-label="Close DSP" type="button" onClick={ onClose }>✕</button>
-    <EqCurve gains={ dsp.eq.gains } />
 
-    <div className="eq-faders">
-      {EQ_BANDS.map((band, index) =>
-        <DspFader key={ band.label } index={ index } label={ band.label } gain={ dsp.eq.gains[index] ?? 0 } onChange={ setGain } />)}
-    </div>
+    <section className="dsp-body">
+      <EqCurve gains={ dsp.eq.gains } />
 
-    <fieldset>
-      <legend>Limiter</legend>
+      <div className="eq-faders">
+        {EQ_BANDS.map((band, index) =>
+          <DspFader key={ band.label } index={ index } label={ band.label } gain={ dsp.eq.gains[index] ?? 0 } onChange={ setGain } />)}
+      </div>
 
-      <label>
-        <input type="checkbox" checked={ dsp.limiter.on } onChange={ toggleLimiter } />
-        On
-      </label>
+      <fieldset>
+        <legend>Limiter</legend>
 
-      <label>
-        Threshold
-        <input type="range" min={ THRESHOLD_MIN } max={ THRESHOLD_MAX } value={ dsp.limiter.threshold } onChange={ onThresholdChange } />
-      </label>
+        <label>
+          <input type="checkbox" checked={ dsp.limiter.on } onChange={ toggleLimiter } />
+          On
+        </label>
 
-      <label>
-        Release
-        <input type="range" min={ RELEASE_MIN } max={ RELEASE_MAX } value={ dsp.limiter.release } onChange={ onReleaseChange } />
-      </label>
-    </fieldset>
+        <label>
+          Threshold
+          <input type="range" min={ THRESHOLD_MIN } max={ THRESHOLD_MAX } value={ dsp.limiter.threshold } onChange={ onThresholdChange } />
+        </label>
+
+        <label>
+          Release
+          <input type="range" min={ RELEASE_MIN } max={ RELEASE_MAX } value={ dsp.limiter.release } onChange={ onReleaseChange } />
+        </label>
+      </fieldset>
+    </section>
   </>
 }

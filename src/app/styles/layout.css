@@ -49,6 +49,57 @@
       overflow-block: auto;
       border-inline-end: var(--border-width-1) solid var(--line);
       transition: inline-size var(--duration-base) var(--ease);
+
+      details summary,
+      > footer button {
+        block-size: var(--row-h-compact);
+        padding-inline: var(--spacing-3);
+        font-size: var(--font-size-sm);
+      }
+
+      details menu button,
+      details ul li button,
+      ul[role='tree'] li[role='treeitem'] {
+        display: flex;
+        align-items: center;
+        inline-size: 100%;
+        block-size: var(--row-h-compact);
+        padding-inline-start: var(--spacing-4);
+        border-radius: var(--border-radius-small);
+        font-size: var(--font-size-sm);
+        color: var(--ink-dim);
+        cursor: pointer;
+
+        &:hover {
+          background: var(--surface-hover);
+        }
+
+        &[aria-pressed='true'],
+        &[aria-selected='true'] {
+          background: var(--accent-muted);
+          color: var(--accent);
+        }
+      }
+
+      ul[role='group'] {
+        padding-inline-start: var(--spacing-4);
+      }
+
+      > footer {
+        padding: var(--spacing-2);
+        border-block-start: var(--border-width-1) solid var(--line);
+
+        menu {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-0-5);
+        }
+
+        button {
+          justify-content: flex-start;
+          padding-inline: var(--spacing-3);
+        }
+      }
     }
 
     main {
@@ -105,24 +156,27 @@
   }
 
   /*
-   * `inset: 0` used to put this over the titlebar and sidebar too, so once
-   * expanded there was no way back to either short of the player's own
-   * controls — the window's minimize/maximize/close buttons and every
-   * sidebar door (folders, playlists, DSP, Settings) were unreachable until
-   * this closed again. Docked under the titlebar and past the sidebar, it
-   * still fills the rest of the window (replacing `<main>` and the footer
-   * player bar), which is what "expanded" means, without taking the whole
-   * shell's chrome down with it.
+   * The expanded player is Now Playing's own full-screen surface, not a
+   * panel docked past the shell's chrome — it replaces the titlebar,
+   * sidebar and footer bar alike while it's open, the same way a maximized
+   * window replaces the desktop under it. `[popover]`'s own window-manager
+   * layer (base.css) already sits above everything else in paint order;
+   * `z-index` here is belt and braces for engines that still consult it
+   * inside the top layer.
    */
   section.player[data-expanded] {
     position: fixed;
-    inset-block: var(--titlebar-h) 0;
-    inset-inline: var(--sidebar-w) 0;
+    inset: 0;
     margin: 0;
-    inline-size: auto;
-    block-size: auto;
+    inline-size: 100vi;
+    block-size: 100vb;
     max-inline-size: none;
     max-block-size: none;
+    padding: 0;
+    border-radius: 0;
+    background: var(--surface);
+    box-shadow: none;
+    z-index: 1;
   }
 
   /*
@@ -138,7 +192,7 @@
     inset-block: var(--titlebar-h) var(--player-bar-h);
     inset-inline-end: 0;
     margin: 0;
-    inline-size: min(26rem, 100%);
+    inline-size: min(56rem, 100%);
     block-size: auto;
     max-inline-size: none;
     max-block-size: none;

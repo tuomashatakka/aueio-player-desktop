@@ -44,6 +44,14 @@ async function ensureServer (): Promise<(() => void) | null> {
 async function shoot (page: Page, name: string, locator?: Locator): Promise<void> {
   const target = join(OUT_DIR, name)
 
+  // `waitForSelector('…', { state: 'visible' })` resolves as soon as a
+  // popover/dialog is attached and non-`display: none` — before its own
+  // opacity/scale transition (base.css's `[popover]`/`dialog` open state)
+  // has settled, so a shot taken immediately catches a part-faded frame
+  // (most visible now that the expanded player covers the whole window:
+  // a mid-fade frame shows the shell underneath faintly through it).
+  await page.waitForTimeout(200)
+
   if (locator)
     await locator.screenshot({ path: target })
   else
@@ -95,6 +103,19 @@ async function captureMainScreens (page: Page, suffix: string): Promise<void> {
 
     await attempt(page, 'waveform.png', async () =>
       page.locator('footer .waveform').first())
+  }
+
+  // The expanded player now covers the whole viewport (AGENTS.md's Now
+  // Playing invariant) rather than docking past the sidebar, so it has to
+  // close again before the sidebar's DSP/Settings doors are reachable —
+  // same toggle button, `aria-pressed` just flips back to `false`. Best
+  // effort, like `attempt`, but this step has no screenshot of its own.
+  try {
+    await clickByName(page, /now playing|expand|open player/i)
+    await page.waitForSelector('section.player[data-expanded]', { state: 'hidden', timeout: TIMEOUT })
+  }
+  catch (error) {
+    console.warn(`  ⚠ could not close the expanded player: ${error instanceof Error ? error.message : String(error)}`)
   }
 
   await attempt(page, `dsp${suffix}.png`, async () => {

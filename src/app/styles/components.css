@@ -107,6 +107,31 @@
     }
   }
 
+  .player-info {
+    menu {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      margin-block-start: var(--spacing-1);
+    }
+
+    button {
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      display: grid;
+      place-items: center;
+      color: var(--ink-dim);
+
+      &:hover {
+        color: var(--ink);
+      }
+
+      &[aria-pressed='true'] {
+        color: var(--accent);
+      }
+    }
+  }
+
   .rating {
     display: inline-flex;
     gap: var(--spacing-0-5);
@@ -185,6 +210,17 @@
     }
   }
 
+  .eq-curve {
+    inline-size: 100%;
+    block-size: 6rem;
+
+    path {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1;
+    }
+  }
+
   .eq-fader {
     display: grid;
     justify-items: center;
@@ -242,6 +278,7 @@
       position: fixed;
       inset-block-start: 0;
       inset-inline-start: 0;
+      translate: var(--menu-x, 0) var(--menu-y, 0);
     }
   }
 
@@ -284,6 +321,7 @@
     background: var(--surface-input);
 
     label {
+      position: relative;
       display: inline-flex;
       align-items: center;
       padding-block: var(--spacing-1);
@@ -298,9 +336,20 @@
       }
     }
 
+    /*
+     * Unsized `position: absolute; appearance: none` left the native radio
+     * at its static position — still the label's own size, still ahead of
+     * the label text it was meant to be replaced by. `inset: 0` stretches
+     * it to cover (and hit-test as) the whole pill instead, `opacity: 0`
+     * hides the native circle without `display: none`'s focus/click loss.
+     */
     input[type='radio'] {
       position: absolute;
+      inset: 0;
       appearance: none;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
     }
   }
 

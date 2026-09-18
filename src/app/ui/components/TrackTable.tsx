@@ -1,6 +1,7 @@
 /** The flat `<table>` view of a track list — used directly, or per group section. */
 import type { ReactElement } from 'react'
 import type { Track } from '../../domain'
+import type { Density } from '../../state/ui'
 import { useStore, useStores } from '../hooks/useStore'
 import { ColumnHeader } from './ColumnHeader'
 import type { TrackRowContext } from './TrackRow'
@@ -8,10 +9,11 @@ import { TrackRow } from './TrackRow'
 
 
 interface TrackTableProps {
-  readonly tracks: readonly Track[]
+  readonly tracks:   readonly Track[]
+  readonly density?: Density
 }
 
-export function TrackTable ({ tracks }: TrackTableProps): ReactElement {
+export function TrackTable ({ tracks, density = 'normal' }: TrackTableProps): ReactElement {
   const stores = useStores()
 
   const columns   = useStore(stores.ui, state =>
@@ -28,7 +30,7 @@ export function TrackTable ({ tracks }: TrackTableProps): ReactElement {
 
   const context: TrackRowContext = { columns: visibleColumns, orderedIds, selectedIds: selection.ids }
 
-  return <table aria-rowcount={ tracks.length }>
+  return <table aria-rowcount={ tracks.length } data-density={ density }>
     <thead>
       <tr>
         {visibleColumns.map(column =>

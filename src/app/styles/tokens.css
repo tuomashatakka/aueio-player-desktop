@@ -234,6 +234,14 @@
     color-scheme: light;
   }
 
+  [data-density='compact'] {
+    --row-h: var(--row-h-compact);
+  }
+
+  [data-density='relaxed'] {
+    --row-h: var(--row-h-relaxed);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     :root {
       --duration-fast: 1ms;

@@ -144,7 +144,7 @@ export function Library (): ReactElement {
     </header>
 
     {grouping === 'none'
-      ? isGrid ? <LibraryGrid tracks={ sorted } /> : <TrackTable tracks={ sorted } />
+      ? isGrid ? <LibraryGrid tracks={ sorted } /> : <TrackTable tracks={ sorted } density={ density } />
       : groups.map(group =>
         <GroupSection key={ group.key } group={ group } density={ density } />)}
   </>
@@ -188,6 +188,6 @@ function GroupSection ({ group, density }: GroupSectionProps): ReactElement {
       <button aria-expanded={ expanded } onClick={ onToggle }>{group.label} · {group.subtitle}</button>
     </h2>
 
-    {expanded && (isGrid ? <LibraryGrid tracks={ group.tracks } /> : <TrackTable tracks={ group.tracks } />)}
+    {expanded && (isGrid ? <LibraryGrid tracks={ group.tracks } /> : <TrackTable tracks={ group.tracks } density={ density } />)}
   </section>
 }
