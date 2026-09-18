@@ -64,7 +64,7 @@ describe('subfolderRows', () => {
 
   test('within a folder, lists its immediate children only, counting their own subtree', () => {
     const rows = subfolderRows(folders, '/music', tracks)
-    expect(rows.sort((a, b) =>
+    expect([ ...rows ].sort((a, b) =>
       a.name.localeCompare(b.name))).toEqual([
       { path: '/music/jazz', name: 'jazz', trackCount: 1 },
       { path: '/music/rock', name: 'rock', trackCount: 2 },

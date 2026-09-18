@@ -16,15 +16,19 @@ function track (path: string, artist = 'Artist', album = 'Album') {
   })
 }
 
+const pick = (...indexes: number[]) =>
+  indexes.map(index =>
+    tracks[index]).filter(Boolean)
+
 describe('tracksForPayload', () => {
   test('kind "tracks" resolves the listed ids, in `tracks` order', () => {
     const payload: DragPayload = { kind: 'tracks', trackIds: [ tracks[3]!.id, tracks[0]!.id ], label: '2 tracks' }
-    expect(tracksForPayload(payload, tracks)).toEqual([ tracks[0], tracks[3] ])
+    expect(tracksForPayload(payload, tracks)).toEqual(pick(0, 3))
   })
 
   test('kind "folder" matches by path prefix, subfolders included', () => {
     const payload: DragPayload = { kind: 'folder', path: '/music/rock', label: 'rock' }
-    expect(tracksForPayload(payload, tracks)).toEqual([ tracks[0], tracks[1], tracks[2] ])
+    expect(tracksForPayload(payload, tracks)).toEqual(pick(0, 1, 2))
   })
 
   test('kind "folder" does not match a sibling with an overlapping name prefix', () => {
@@ -35,7 +39,7 @@ describe('tracksForPayload', () => {
 
   test('kind "group" matches the album/artist bucket key', () => {
     const payload: DragPayload = { kind: 'group', grouping: 'artist', key: 'Y', label: 'Y' }
-    expect(tracksForPayload(payload, tracks)).toEqual([ tracks[3] ])
+    expect(tracksForPayload(payload, tracks)).toEqual(pick(3))
   })
 
   test('kind "playlist" resolves to nothing — it carries no tracks of its own', () => {

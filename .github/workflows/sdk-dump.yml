@@ -1,0 +1,32 @@
+name: SDK dump
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dump:
+    name: Print Electrobun devkit SDK surface
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - run: bunx electrobun sync
+
+      - name: Print SDK surface
+        run: |
+          find .hutch/devkit -maxdepth 4 -not -path '*/node_modules/*' | sort | head -200
+          echo '===== tsconfig'; cat .hutch/devkit/tsconfig.json || true
+          echo '===== main/index.ts'; cat .hutch/devkit/api/sdks/main/index.ts || true
+          echo '===== view/index.ts'; cat .hutch/devkit/api/sdks/view/index.ts || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: electrobun-devkit-api
+          path: .hutch/devkit/api/
+          retention-days: 3
