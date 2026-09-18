@@ -113,23 +113,49 @@ jobs:
   release:
     name: GitHub Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release tag from package.json
+        id: version
+        shell: bash
+        run: |
+          version=$(python3 -c "import json; print(json.load(open('package.json'))['version'])")
+          tag="v$version"
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            tag="${GITHUB_REF#refs/tags/}"
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1 && [[ "$GITHUB_REF" != refs/tags/* ]]; then
+            echo "tag $tag already exists; nothing to release"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Download all artifacts
+        if: steps.version.outputs.skip == 'false'
         uses: actions/download-artifact@v4
         with:
           path: artifacts/
+          pattern: aueio-*
 
       - name: List artifacts
+        if: steps.version.outputs.skip == 'false'
         run: find artifacts/ -type f | sort
 
       - name: Create GitHub Release
+        if: steps.version.outputs.skip == 'false'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
           files: artifacts/**/*
