@@ -10,10 +10,11 @@ import { mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 
-const ROOT     = join(import.meta.dir, '..')
-const BASE_URL = 'http://localhost:4173'
-const OUT_DIR  = join(ROOT, 'docs/screenshots')
-const TIMEOUT  = 2000
+const ROOT      = join(import.meta.dir, '..')
+const BASE_URL  = 'http://localhost:4173'
+const OUT_DIR   = join(ROOT, 'docs/screenshots')
+const TIMEOUT   = 2000
+const SETTLE_MS = 600
 
 async function serverIsUp (): Promise<boolean> {
   try {
@@ -50,7 +51,11 @@ async function shoot (page: Page, name: string, locator?: Locator): Promise<void
   // has settled, so a shot taken immediately catches a part-faded frame
   // (most visible now that the expanded player covers the whole window:
   // a mid-fade frame shows the shell underneath faintly through it).
-  await page.waitForTimeout(200)
+  //
+  // Comfortably past `--duration-slow` (400ms), the longest transition any
+  // of these surfaces runs — the DSP drawer's slide and the expanded
+  // player's mode change both take that long.
+  await page.waitForTimeout(SETTLE_MS)
 
   if (locator)
     await locator.screenshot({ path: target })
@@ -77,10 +82,56 @@ async function clickByName (page: Page, pattern: RegExp): Promise<void> {
   await target.click({ timeout: TIMEOUT })
 }
 
+/**
+ * Switches to the light theme through the Settings screen, the way a user
+ * would. Writing `documentElement.dataset.theme` here instead looks like it
+ * works and then silently reverts: `effects/appearance.ts` is the sole
+ * writer of `data-theme` (AGENTS.md's "One Writer for `--accent`") and
+ * rewrites it from `settings.theme` on the next settings *or playback*
+ * change — which starting a track is.
+ */
+async function selectLightTheme (page: Page): Promise<void> {
+  try {
+    await clickByName(page, /^settings$/i)
+    await page.getByRole('radio', { name: /^light$/i }).first()
+      .check({ timeout: TIMEOUT })
+    await clickByName(page, /^library$/i)
+    await page.waitForFunction(() =>
+      document.documentElement.dataset.theme === 'light', undefined, { timeout: TIMEOUT })
+  }
+  catch (error) {
+    console.warn(`  ⚠ could not switch to the light theme: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
+/**
+ * Starts the first track before any player shot is taken. Without it every
+ * player baseline captures the `[data-empty]` state — no title, no artist,
+ * a flat seek bar — which shows none of the layout those shots exist to
+ * document. Best-effort, like `attempt`: a run that can't start playback
+ * still captures the empty player rather than failing.
+ */
+async function playFirstTrack (page: Page): Promise<void> {
+  try {
+    await page.waitForSelector('tbody tr[data-track-id]', { timeout: TIMEOUT })
+    await page.locator('tbody tr[data-track-id]').first()
+      .dblclick({ timeout: TIMEOUT })
+
+    // Scoped to the footer copy: the expanded wrapper never carries
+    // `data-empty`, so an unscoped `:not([data-empty])` always matches.
+    await page.waitForSelector('footer.player section.player:not([data-empty])', { timeout: TIMEOUT })
+  }
+  catch (error) {
+    console.warn(`  ⚠ could not start playback: ${error instanceof Error ? error.message : String(error)}`)
+  }
+}
+
 async function captureMainScreens (page: Page, suffix: string): Promise<void> {
   await attempt(page, `library-list${suffix}.png`, async () => {
     await page.waitForSelector('main[data-view]', { timeout: TIMEOUT })
   })
+
+  await playFirstTrack(page)
 
   if (suffix === '')
     await attempt(page, 'library-grid.png', async () => {
@@ -167,9 +218,7 @@ async function main (): Promise<void> {
       localStorage.clear())
     await page.reload()
     await page.waitForSelector('main[data-view]', { timeout: TIMEOUT }).catch(() => {})
-    await page.evaluate(() => {
-      document.documentElement.dataset.theme = 'light'
-    })
+    await selectLightTheme(page)
 
     console.log('light theme:')
     await captureMainScreens(page, '-light')

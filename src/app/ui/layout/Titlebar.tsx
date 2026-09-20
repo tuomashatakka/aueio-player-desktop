@@ -4,6 +4,7 @@
  * region — see the `electrobun-webkit-app-region-*` classes in AGENTS.md L8.
  */
 import type { ChangeEvent, ReactElement } from 'react'
+import { Icon } from '../components/Icon'
 import { useStore, useStores } from '../hooks/useStore'
 
 
@@ -38,10 +39,11 @@ export function Titlebar (): ReactElement {
   return <header className="titlebar electrobun-webkit-app-region-drag">
     <button
       className="button icon electrobun-webkit-app-region-no-drag"
+      aria-label="Toggle sidebar"
       aria-controls="sidebar"
       aria-expanded={ sidebarOpen }
       onClick={ toggleSidebar }>
-      ☰
+      <Icon name="menu" />
     </button>
 
     <h1>aüeio</h1>
@@ -56,9 +58,17 @@ export function Titlebar (): ReactElement {
     </search>
 
     <nav className="electrobun-webkit-app-region-no-drag" aria-label="Window">
-      <button className="button icon" onClick={ minimize }>–</button>
-      <button className="button icon" onClick={ maximize }>▢</button>
-      <button className="button icon" onClick={ close }>✕</button>
+      <button className="button icon" aria-label="Minimize" onClick={ minimize }>
+        <Icon name="minimize" />
+      </button>
+
+      <button className="button icon" aria-label="Maximize" onClick={ maximize }>
+        <Icon name="maximize" />
+      </button>
+
+      <button className="button icon" aria-label="Close window" onClick={ close }>
+        <Icon name="close" />
+      </button>
     </nav>
   </header>
 }

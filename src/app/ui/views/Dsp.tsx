@@ -4,6 +4,7 @@ import type { DspJSON } from '../../../shared/dto'
 import { DspFader } from '../components/DspFader'
 import { EQ_BANDS } from '../components/eqMath'
 import { EqCurve } from '../components/EqCurve'
+import { Icon } from '../components/Icon'
 import { useStore, useStores } from '../hooks/useStore'
 
 
@@ -42,7 +43,9 @@ export function Dsp (): ReactElement {
   }
 
   return <>
-    <button className="button icon" aria-label="Close DSP" type="button" onClick={ onClose }>✕</button>
+    <button className="button icon" aria-label="Close DSP" type="button" onClick={ onClose }>
+      <Icon name="close" />
+    </button>
 
     <section className="dsp-body">
       <EqCurve gains={ dsp.eq.gains } />
