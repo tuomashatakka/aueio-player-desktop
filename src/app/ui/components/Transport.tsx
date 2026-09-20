@@ -1,6 +1,7 @@
 /** The `<menu class="transport">` of playback buttons. */
 import type { ReactElement } from 'react'
 import { useStore, useStores } from '../hooks/useStore'
+import { Icon } from './Icon'
 
 
 export function Transport (): ReactElement {
@@ -37,23 +38,34 @@ export function Transport (): ReactElement {
 
   return <menu className="transport">
     <li>
-      <button aria-pressed={ shuffle } onClick={ onShuffle }>⇄</button>
+      <button aria-label="Shuffle" aria-pressed={ shuffle } onClick={ onShuffle }>
+        <Icon name="shuffle" />
+      </button>
     </li>
 
     <li>
-      <button onClick={ onPrevious }>⏮</button>
+      <button aria-label="Previous track" onClick={ onPrevious }>
+        <Icon name="previous" />
+      </button>
     </li>
 
     <li>
-      <button className="play" aria-pressed={ isPlaying } onClick={ onPlayPause }>{isPlaying ? '⏸' : '⏵'}</button>
+      <button className="play" aria-label={ isPlaying ? 'Pause' : 'Play' } aria-pressed={ isPlaying } onClick={ onPlayPause }>
+        <Icon name={ isPlaying ? 'pause' : 'play' } />
+      </button>
     </li>
 
     <li>
-      <button onClick={ onNext }>⏭</button>
+      <button aria-label="Next track" onClick={ onNext }>
+        <Icon name="next" />
+      </button>
     </li>
 
+    {/* `data-repeat` carries the three-way mode ('none' | 'all' | 'one') CSS keys off. */}
     <li>
-      <button data-repeat={ repeat } onClick={ onRepeat }>↻</button>
+      <button aria-label="Repeat" aria-pressed={ repeat !== 'none' } data-repeat={ repeat } onClick={ onRepeat }>
+        <Icon name="repeat" />
+      </button>
     </li>
   </menu>
 }

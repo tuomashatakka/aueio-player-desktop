@@ -20,13 +20,17 @@
     min-block-size: 0;
 
     > header {
+      position: sticky;
+      inset-block-start: 0;
+      z-index: 2;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex: none;
-      gap: var(--spacing-2);
-      padding-block: var(--spacing-2);
-      padding-inline: var(--spacing-3);
+      gap: var(--spacing-4);
+      padding-block: var(--spacing-3);
+      padding-inline: var(--spacing-5);
+      background: var(--surface);
       border-block-end: var(--border-width-1) solid var(--line);
     }
 
@@ -44,58 +48,189 @@
     table {
       flex: none;
       inline-size: 100%;
+      padding-inline: var(--spacing-2);
+    }
+
+    th button {
+      font: inherit;
+      letter-spacing: inherit;
+      color: inherit;
+
+      &:hover {
+        color: var(--ink);
+      }
+    }
+
+    /* The art column's thumbnail tracks whatever `--row-h` the density sets. */
+    td .cover {
+      block-size: calc(var(--row-h) - var(--spacing-2));
+      inline-size: auto;
+      border-radius: var(--border-radius-small);
+    }
+
+    /* The grid densities: `LibraryGrid`'s `<ul>` of cover cards. */
+    > ul,
+    section > ul {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+      gap: var(--spacing-5);
+      padding: var(--spacing-5);
+    }
+
+    /*
+     * The grid card's own padded box. Without it the selected tint runs
+     * edge to edge behind an opaque cover and only shows as a band under
+     * it; padded and rounded, selection reads as the whole card.
+     * `:has(article)` is what tells a grid card from the settings view's
+     * plain list rows.
+     */
+    li:has(article) {
+      padding: var(--spacing-2);
+      border-radius: var(--border-radius-medium);
+    }
+
+    li article {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+
+      p {
+        font-size: var(--font-size-sm);
+        color: var(--ink);
+      }
+
+      p + p {
+        font-size: var(--font-size-xs);
+        color: var(--ink-muted);
+      }
+    }
+
+    li:hover .cover {
+      box-shadow: inset 0 0 0 var(--border-width-1) var(--line-hover);
+    }
+
+    /* The group-by sections' headings share the sidebar's micro-label voice. */
+    section > h2 {
+      padding-block: var(--spacing-4) var(--spacing-2);
+      padding-inline: var(--spacing-5);
+
+      button {
+        font-size: var(--font-size-xs);
+        font-weight: var(--font-weight-medium);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--ink-muted);
+
+        &:hover {
+          color: var(--ink);
+        }
+      }
     }
   }
 
   main[data-view='settings'] {
     overflow-block: auto;
-    padding: var(--spacing-4);
+    padding-block: var(--spacing-8);
+    padding-inline: var(--spacing-8);
 
     form {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-6);
-      max-inline-size: 48rem;
+      gap: var(--spacing-10);
+      max-inline-size: 42rem;
+      margin-inline: auto;
     }
 
     fieldset {
       display: flex;
       flex-direction: column;
+      align-items: flex-start;
+      gap: var(--spacing-4);
+    }
+
+    label {
+      display: flex;
+      align-items: center;
       gap: var(--spacing-3);
+      font-size: var(--font-size-sm);
+      color: var(--ink-dim);
+    }
+
+    /* A column of `align-items: flex-start` still needs the lists full-width. */
+    ul {
+      align-self: stretch;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-3);
+      block-size: var(--row-h);
+      padding-inline: var(--spacing-3);
+      border-radius: var(--border-radius-base);
+      font-size: var(--font-size-sm);
+      font-family: var(--font-family-mono);
+      color: var(--ink-dim);
+      transition: background var(--duration-fast) var(--ease);
+
+      &:hover {
+        background: var(--surface-hover);
+      }
     }
   }
 
   dialog.tag-editor {
     inline-size: min(90vi, 32rem);
-    padding: var(--spacing-4);
+    padding: var(--spacing-6);
 
     form {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-3);
+      gap: var(--spacing-5);
     }
 
     fieldset {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: var(--spacing-3);
+      gap: var(--spacing-4);
 
       label {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-1);
+        align-items: stretch;
+        gap: var(--spacing-2);
+        font-size: var(--font-size-xs);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--ink-muted);
       }
     }
 
     details {
-      margin-block-start: var(--spacing-2);
+      summary {
+        font-size: var(--font-size-xs);
+        letter-spacing: var(--tracking-label);
+        text-transform: uppercase;
+        color: var(--ink-muted);
+
+        &:hover {
+          color: var(--ink);
+        }
+      }
 
       label {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-1);
-        margin-block-start: var(--spacing-2);
+        gap: var(--spacing-2);
+        margin-block-start: var(--spacing-4);
       }
+    }
+
+    menu {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--spacing-2);
     }
   }
 
@@ -121,49 +256,71 @@
   section.player:not([data-expanded]) {
     display: grid;
     grid-template-areas: 'art info transport waveform';
-    grid-template-columns: var(--cover-sm) auto 1fr auto;
+    grid-template-columns: var(--cover-sm) minmax(0, 16rem) 1fr auto;
     align-items: center;
-    gap: var(--spacing-3);
+    gap: var(--spacing-4);
     block-size: var(--player-bar-h);
-    padding-inline: var(--spacing-3);
+    padding-inline: var(--spacing-5);
     overflow: hidden;
 
     .cover {
       grid-area: art;
       inline-size: var(--cover-sm);
       block-size: var(--cover-sm);
-      transition:
-        transform var(--duration-slow) var(--ease-emphasis),
-        opacity var(--duration-slow) var(--ease-emphasis);
     }
 
     .player-info {
       grid-area: info;
       min-inline-size: 0;
-      max-inline-size: 14rem;
     }
 
     .transport {
       grid-area: transport;
+      gap: var(--spacing-4);
+    }
+
+    /* The bar's play button is the compact one — the overlay's is `--play-size`. */
+    .transport .play {
+      inline-size: var(--spacing-10);
+      block-size: var(--spacing-10);
+
+      svg {
+        inline-size: var(--spacing-4);
+        block-size: var(--spacing-4);
+      }
     }
 
     .waveform {
       grid-area: waveform;
-      inline-size: 10rem;
+      inline-size: 12rem;
+      block-size: 2rem;
     }
 
     /*
-     * `.player-content` (the chord lane, readout and frequency-matrix
-     * wallpaper) and `.lyrics` have no grid area in the bar's four-column
-     * template above — a merely collapsed copy of either is still a grid
-     * item, auto-places into an implicit row/column and adds this row's
-     * `gap`, which is what once blew the 72px bar out to ~300px. `display:
-     * none` here is a structural, per-tier hide (bar vs. the overlay
-     * below), not the mode/lyrics *state* toggle within one tier — that
-     * stays opacity/transform-only, never a gate on the element itself.
+     * `.player-content` (the chord lane and readout), the frequency-matrix
+     * wallpaper, the waveform's time labels and `.lyrics` have no grid area
+     * in the bar's four-column template above — a merely collapsed copy of
+     * any of them is still a grid item, auto-places into an implicit
+     * row/column and adds this row's `gap`, which is what once blew the
+     * 72px bar out to ~300px. `display: none` here is a structural,
+     * per-tier hide (bar vs. the overlay below), not the mode/lyrics
+     * *state* toggle within one tier — that stays opacity/transform-only,
+     * never a gate on the element itself.
      */
     .player-content,
-    .lyrics {
+    .frequency-matrix,
+    .lyrics,
+    .waveform footer {
+      display: none;
+    }
+
+    /*
+     * Three text lines plus the control row is taller than `--player-bar-h`,
+     * and a grid item centred in a track shorter than itself overflows both
+     * ways — the title was being clipped by the bar's top edge. The album is
+     * the line the bar can do without; it stays in the expanded copy.
+     */
+    .player-album {
       display: none;
     }
 
@@ -184,108 +341,277 @@
   }
 
   /*
-   * The expanded copy: same markup, a full-window layout. Cover at ~40%
-   * inline-size, title/artist/album beside it, the waveform and transport
-   * below spanning the full width. `.player-content` shares the cover/info
-   * row (`grid-column: 1 / -1; grid-row: 1`, not a named area, so it
-   * overlaps rather than adding a track) and fades in for
-   * `[data-mode='analysis']` while the cover fades up and out — the
-   * frequency-matrix mesh sits behind the chord lane and readout as
-   * wallpaper. `.lyrics` becomes a trailing panel for `[data-lyrics='true']`.
+   * The expanded copy: same markup, a full-window layout.
+   *
+   * One two-column grid serves both modes the mocks call for. The leading
+   * column is always the stack — cover, title block, chord lane, seek bar —
+   * vertically centred by `align-content`; the trailing column holds the
+   * frequency mesh and only claims width in `[data-mode='analysis']`, where
+   * `grid-template-columns` animates it open. The transport spans the foot
+   * of both, and `.lyrics` rides over the trailing edge as a panel.
+   *
+   * Mode is therefore *sizing*, never mounting: the cover collapses via
+   * `max-block-size`, the chord lane and mesh via opacity plus that column
+   * track. Nothing is display-toggled, so every mode change is a transition.
    */
   section.player[data-expanded] > section.player {
+    position: relative;
     grid-template-areas:
-      'art info'
-      'waveform waveform'
+      'art       matrix'
+      'info      matrix'
+      'content   matrix'
+      'waveform  matrix'
       'transport transport';
-    grid-template-columns: 40% 1fr;
-    grid-template-rows: 1fr auto auto;
-    gap: var(--spacing-6) var(--spacing-8);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+    grid-template-rows: auto auto auto auto auto;
+    align-content: center;
+    justify-items: stretch;
+    gap: var(--spacing-5) var(--spacing-10);
     block-size: 100%;
-    padding: var(--spacing-8);
+    padding-block: var(--spacing-12);
+    padding-inline: clamp(var(--spacing-8), 8vi, var(--spacing-24));
+    transition: grid-template-columns var(--duration-slow) var(--ease-emphasis);
+
+    /*
+     * Cover, title block, chord lane and seek bar are one stack: same width,
+     * same leading edge, centred in whatever the leading column currently
+     * is. Without the cap they each stretch to the full column, which in
+     * default mode (where the trailing column is collapsed to 0fr) means a
+     * seek bar running the entire window width under a centred cover.
+     */
+    /*
+     * `40vb` is what keeps the cover *square*. `aspect-ratio: 1` only sizes
+     * the axis that is `auto`, so capping the art's height with
+     * `max-block-size` instead left a full-width box cropped to 40vb tall —
+     * a 512×320 rectangle. Bounding the inline axis lets the aspect ratio
+     * derive the height, and giving the title block and seek bar the same
+     * bound puts the whole stack on one leading edge, as mock 2 has it.
+     */
+    .cover,
+    .player-info,
+    .player-content,
+    .waveform {
+      justify-self: center;
+      inline-size: min(100%, var(--player-stack), 40vb);
+      transition: inline-size var(--duration-slow) var(--ease-emphasis);
+    }
 
     .cover {
-      inline-size: 100%;
+      grid-area: art;
       block-size: auto;
-      max-block-size: 60vb;
+      margin-block-end: var(--spacing-5);
+      border-radius: var(--border-radius-medium);
     }
 
     .player-info {
-      position: relative;
-      z-index: 1;
+      grid-area: info;
+      gap: var(--spacing-1);
       max-inline-size: none;
     }
 
-    .waveform {
-      inline-size: 100%;
-      block-size: 2.5rem;
+    .player-title {
+      font-size: var(--font-size-3xl);
+    }
+
+    /* Restored from the bar's per-tier hide — see the `display` note above. */
+    .player-album {
+      display: block;
+    }
+
+    .player-artist,
+    .player-album {
+      font-size: var(--font-size-lg);
+    }
+
+    /*
+     * The four-icon toolbar of mock 1: `.player-info`'s own `<menu>`,
+     * lifted out of the text block and pinned to the window's top-trailing
+     * corner. Absolute rather than a grid area because the "One DOM"
+     * invariant keeps it inside `.player-info` in both copies.
+     */
+    .player-info menu {
+      position: absolute;
+      inset-block-start: var(--spacing-6);
+      inset-inline-end: var(--spacing-6);
+      z-index: 3;
+      gap: var(--spacing-2);
+      margin-block-start: 0;
+
+      button {
+        inline-size: var(--control-h);
+        block-size: var(--control-h);
+        border-radius: var(--border-radius-base);
+      }
+
+      /*
+       * The expand toggle is the overlay's close button once the overlay is
+       * open, and a close button that highlights itself accent-on-tint
+       * reads as "active" rather than "dismiss" — the mode toggles beside
+       * it are the ones whose pressed state is worth seeing.
+       */
+      li:last-child button[aria-pressed='true'] {
+        color: var(--ink-dim);
+        background: none;
+      }
     }
 
     .player-content {
-      position: relative;
-      display: grid;
-      grid-column: 1 / -1;
-      grid-row: 1;
-      grid-template-columns: 1fr 1fr;
-      align-items: center;
-      gap: var(--spacing-4);
+      grid-area: content;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-6);
       min-block-size: 0;
+      max-block-size: 0;
+      overflow: hidden;
       opacity: 0;
       pointer-events: none;
+      transition:
+        opacity var(--duration-slow) var(--ease-emphasis),
+        max-block-size var(--duration-slow) var(--ease-emphasis);
+    }
+
+    /*
+     * `display` here is not decoration, it is the per-tier override: the
+     * bar's block above is `section.player:not([data-expanded])`, and the
+     * element that carries `[data-expanded]` is the *wrapper* popover, not
+     * this inner copy — so the bar's structural `display: none` list
+     * reaches this copy too and every element in it has to name its own
+     * display back. Same for `.player-content`, `.lyrics` and the
+     * waveform's clock below.
+     */
+    .frequency-matrix {
+      grid-area: matrix;
+      display: block;
+      align-self: center;
+      min-inline-size: 0;
+      block-size: min(60vb, 30rem);
+      opacity: 0;
       transition: opacity var(--duration-slow) var(--ease-emphasis);
     }
 
-    .frequency-matrix {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
+    .waveform {
+      grid-area: waveform;
+      block-size: 4rem;
+      margin-block-start: var(--spacing-3);
     }
 
-    .chord-lane,
-    .readout {
-      position: relative;
-      z-index: 1;
+    .waveform footer {
+      display: flex;
     }
 
+    .transport {
+      grid-area: transport;
+      margin-block-start: var(--spacing-10);
+    }
+
+    /*
+     * Mock 2's lyrics column: a panel on the trailing edge that slides in
+     * over whatever the mode is showing, each line a block that hugs its
+     * own text and fades out towards the panel's edges.
+     */
     .lyrics {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      z-index: 2;
       display: flex;
       flex-direction: column;
       gap: var(--spacing-2);
-      grid-column: 1 / -1;
-      grid-row: 1 / -1;
       justify-self: end;
-      inline-size: min(24rem, 40%);
+      inline-size: min(26rem, 45%);
       block-size: 100%;
-      margin: calc(-1 * var(--spacing-8));
-      padding: var(--spacing-8);
+      margin-block: calc(-1 * var(--spacing-12));
+      margin-inline-end: calc(-1 * clamp(var(--spacing-8), 8vi, var(--spacing-24)));
+      padding-block: var(--spacing-16);
+      padding-inline: var(--spacing-8);
       overflow-block: auto;
       background: var(--surface-raised);
       border-inline-start: var(--border-width-1) solid var(--line);
-      transform: translateX(100%);
-      transition: transform var(--duration-slow) var(--ease-emphasis);
+      mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black var(--spacing-16),
+        black calc(100% - var(--spacing-16)),
+        transparent
+      );
+      translate: 100% 0;
+      opacity: 0;
+      transition:
+        translate var(--duration-slow) var(--ease-emphasis),
+        opacity var(--duration-base) var(--ease);
+
+      p {
+        inline-size: fit-content;
+        max-inline-size: 100%;
+        margin-inline-start: auto;
+        padding-block: var(--spacing-0-5);
+        padding-inline: var(--spacing-2);
+        background: var(--lyric-rest);
+        font-size: var(--font-size-md);
+        font-weight: var(--font-weight-medium);
+        line-height: var(--font-line-height-relaxed);
+        text-align: end;
+        text-wrap: balance;
+        color: var(--ink-dim);
+        transition:
+          background var(--duration-base) var(--ease),
+          color var(--duration-base) var(--ease);
+      }
+
+      p:hover {
+        background: var(--lyric-active);
+        color: var(--ink);
+      }
     }
 
     &[data-mode='analysis'] {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+
+      /* No cover to match any more, so the text stack takes its column. */
+      .player-info,
+      .player-content,
+      .waveform {
+        inline-size: min(100%, var(--player-stack));
+      }
+
       .cover {
-        transform: translateY(calc(-1 * var(--spacing-8)));
+        max-block-size: 0;
+        margin-block-end: 0;
         opacity: 0;
       }
 
       .player-content {
+        max-block-size: 30vb;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .frequency-matrix {
         opacity: 1;
       }
     }
 
     &[data-lyrics='true'] .lyrics {
-      transform: translateX(0);
+      translate: 0 0;
+      opacity: 1;
+    }
+
+    &[data-empty] {
+      .cover,
+      .player-info {
+        opacity: 0.4;
+      }
     }
   }
 
   section.dsp {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-4);
-    padding: var(--spacing-4);
+    gap: var(--spacing-5);
+    padding: var(--spacing-6);
+
+    > button {
+      align-self: flex-end;
+    }
 
     .dsp-body {
       display: grid;
@@ -293,7 +619,7 @@
       grid-template-areas:
         'curve curve'
         'faders limiter';
-      gap: var(--spacing-4) var(--spacing-6);
+      gap: var(--spacing-8) var(--spacing-8);
       align-items: start;
       /*
        * A grid track's automatic minimum size is its content's min-content
@@ -308,6 +634,9 @@
 
     .eq-curve {
       grid-area: curve;
+      padding: var(--spacing-4);
+      background: var(--surface-input);
+      border-radius: var(--border-radius-medium);
     }
 
     .eq-faders {
@@ -315,7 +644,7 @@
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      gap: var(--spacing-1);
+      gap: var(--spacing-2);
       min-inline-size: 0;
     }
 
@@ -323,14 +652,14 @@
       grid-area: limiter;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-3);
+      gap: var(--spacing-4);
       align-self: start;
       inline-size: 12rem;
 
       label {
         display: flex;
         align-items: center;
-        gap: var(--spacing-2);
+        gap: var(--spacing-3);
       }
     }
   }

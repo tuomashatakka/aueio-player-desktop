@@ -55,6 +55,20 @@
 }
 
 
+/*
+ * The seek head's 0‥1 fraction, written on `.waveform` per frame by
+ * `Waveform`. `inherits: true` is load-bearing, not a default: the property
+ * is *read* by `.wf-played`'s clip-path on a descendant `<path>`, so a
+ * non-inheriting registration would leave that path clipped at the initial
+ * value forever and freeze the played region at zero width.
+ */
+@property --progress {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 0;
+}
+
+
 @layer tokens {
   /*
    * Declaration order below is load-bearing: `css/no-invalid-properties`
@@ -63,19 +77,28 @@
    * --duration-slow, --ease, --ink …) is declared before its first use.
    */
   :root {
-    /* ─── primitives: neutral scale, cool near-black in dark ──────────── */
+    /*
+     * ─── primitives: neutral scale ────────────────────────────────────
+     *
+     * Deliberately *flat* at the dark end: 950→800 are four barely-apart
+     * near-blacks, so the shell, a raised panel, an input well and a hover
+     * state read as one continuous dark surface separated by hairlines and
+     * space rather than by stacked elevation. Anything that needs to stand
+     * out gets the accent, not a lighter grey.
+     */
 
-    --color-neutral-50: #f4f4f8;
-    --color-neutral-100: #eceef3;
-    --color-neutral-200: #dadde5;
-    --color-neutral-300: #c5c5d0;
-    --color-neutral-400: #8888a0;
-    --color-neutral-500: #6b6b80;
-    --color-neutral-600: #4a4a5c;
-    --color-neutral-700: #2a2a35;
-    --color-neutral-800: #1a1a22;
-    --color-neutral-900: #111118;
-    --color-neutral-950: #0b0b10;
+    --color-neutral-50: #f7f7fa;
+    --color-neutral-100: #ededf2;
+    --color-neutral-200: #d9d9e2;
+    --color-neutral-300: #b4b4c2;
+    --color-neutral-400: #82828f;
+    --color-neutral-500: #5b5b68;
+    --color-neutral-600: #3c3c47;
+    --color-neutral-700: #26262e;
+    --color-neutral-800: #1a1a20;
+    --color-neutral-850: #131318;
+    --color-neutral-900: #0e0e12;
+    --color-neutral-950: #08080b;
 
     /* ─── primitives: primary scale, teal-cyan accent family ───────────── */
 
@@ -99,7 +122,7 @@
     --color-semantic-warning-500: #ffd166;
     --color-semantic-warning-700: #8a5f00;
     --color-semantic-error-50: #ffe9f1;
-    --color-semantic-error-500: #ff2e7e;
+    --color-semantic-error-500: #ff3b63;
     --color-semantic-error-700: #8a0038;
     --color-semantic-info-50: #e8f8ff;
     --color-semantic-info-500: #5cd1ff;
@@ -109,17 +132,23 @@
 
     /* ─── motion ─────────────────────────────────────────────────────────── */
 
-    --duration-fast: 120ms;
-    --duration-base: 220ms;
-    --duration-slow: 380ms;
+    --duration-instant: 90ms;
+    --duration-fast: 140ms;
+    --duration-base: 240ms;
+    --duration-slow: 400ms;
+    --duration-slower: 640ms;
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
     --ease-emphasis: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-exit: cubic-bezier(0.4, 0, 1, 1);
 
     /* ─── accent, registered above so it cross-fades between tracks ────── */
 
     --accent: var(--color-primary-500);
     --accent-contrast: var(--color-neutral-950);
     --accent-muted: color-mix(in srgb, var(--accent) 14%, transparent);
+    --accent-soft: color-mix(in srgb, var(--accent) 8%, transparent);
+    --accent-glow: color-mix(in srgb, var(--accent) 30%, transparent);
+    --accent-dim: color-mix(in srgb, var(--accent) 55%, transparent);
     transition:
       --accent var(--duration-slow) var(--ease),
       --accent-contrast var(--duration-slow) var(--ease),
@@ -132,15 +161,20 @@
     /* ─── semantic roles, resolved per colour-scheme ────────────────────── */
 
     --surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+    --surface-sunken: light-dark(var(--color-neutral-100), var(--color-base-black));
     --surface-raised: light-dark(var(--color-base-white), var(--color-neutral-900));
-    --surface-input: light-dark(var(--color-neutral-100), var(--color-neutral-800));
-    --surface-hover: light-dark(var(--color-neutral-200), var(--color-neutral-700));
+    --surface-overlay: light-dark(var(--color-neutral-50), var(--color-neutral-900));
+    --surface-input: light-dark(var(--color-neutral-100), var(--color-neutral-850));
+    --surface-hover: light-dark(var(--color-neutral-200), var(--color-neutral-800));
     --ink: light-dark(var(--color-neutral-950), var(--color-neutral-50));
     --ink-dim: light-dark(var(--color-neutral-600), var(--color-neutral-300));
     --ink-muted: light-dark(var(--color-neutral-500), var(--color-neutral-400));
-    --line: light-dark(rgb(0 0 0 / 8%), rgb(255 255 255 / 10%));
-    --line-hover: light-dark(rgb(0 0 0 / 18%), rgb(255 255 255 / 20%));
-    --focus-ring: 0 0 0 0.125rem var(--accent);
+    --ink-faint: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+    --line: light-dark(rgb(0 0 0 / 7%), rgb(255 255 255 / 7%));
+    --line-hover: light-dark(rgb(0 0 0 / 14%), rgb(255 255 255 / 14%));
+    --line-strong: light-dark(rgb(0 0 0 / 24%), rgb(255 255 255 / 24%));
+    --scrim: light-dark(rgb(255 255 255 / 55%), rgb(0 0 0 / 60%));
+    --focus-ring: 0 0 0 0.125rem var(--surface), 0 0 0 0.1875rem var(--accent);
 
     color-scheme: light dark;
     /* eslint-disable-next-line css/use-baseline -- accent-color is supported by every engine desktop-audio targets (chrome146); the rule's 'newly' baseline window is stricter than this app's platform floor */
@@ -150,6 +184,7 @@
 
     --font-family-sans: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-family-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --font-size-2xs: 0.625rem;
     --font-size-xs: 0.6875rem;
     --font-size-sm: 0.75rem;
     --font-size-md: 0.875rem;
@@ -169,6 +204,17 @@
     --font-line-height-tight: 1.1;
     --font-line-height-base: 1.4;
     --font-line-height-relaxed: 1.6;
+
+    /*
+     * Tracking. `--tracking-label` is the signature of the whole dark
+     * theme: every micro-label (CHORD, KEY, TEMPO, sidebar section heads,
+     * table column heads) is uppercase, small and widely tracked, which is
+     * what keeps those rows legible once the type is this dim.
+     */
+    --tracking-tight: -0.02em;
+    --tracking-normal: 0em;
+    --tracking-label: 0.14em;
+    --tracking-wide: 0.22em;
 
     /* ─── spacing, 0.25rem unit ──────────────────────────────────────────── */
 
@@ -197,33 +243,47 @@
     --border-radius-none: 0rem;
     --border-radius-small: 0.25rem;
     --border-radius-base: 0.5rem;
+    --border-radius-medium: 0.75rem;
     --border-radius-large: 1rem;
     --border-radius-full: 62.5rem;
 
-    /* ─── shadow ─────────────────────────────────────────────────────────── */
+    /*
+     * ─── shadow ───────────────────────────────────────────────────────────
+     *
+     * Flat theme: shadow is for things that genuinely float above the
+     * window (popovers, menus, the modal dialog) and nothing else. In-page
+     * surfaces separate with `--line`, never with a drop shadow.
+     */
 
-    --shadow-shallow: 0 0.0625rem 0.125rem rgb(0 0 0 / 35%);
-    --shadow-base: 0 0.25rem 0.75rem rgb(0 0 0 / 40%);
-    --shadow-elevated: 0 0.75rem 2rem rgb(0 0 0 / 50%);
-    --shadow-floating: 0 2rem 5rem rgb(0 0 0 / 70%);
+    --shadow-shallow: 0 0.0625rem 0.125rem rgb(0 0 0 / 30%);
+    --shadow-base: 0 0.375rem 1rem rgb(0 0 0 / 35%);
+    --shadow-elevated: 0 0.875rem 2.25rem rgb(0 0 0 / 50%);
+    --shadow-floating: 0 1.5rem 4rem rgb(0 0 0 / 65%);
 
     /* ─── structural sizes ───────────────────────────────────────────────── */
 
-    --titlebar-h: 2.5rem;
-    --player-bar-h: 4.5rem;
-    --sidebar-w: 14rem;
-    --row-h: 2.5rem;
-    --row-h-compact: 1.75rem;
+    --titlebar-h: 3rem;
+    --player-bar-h: 5rem;
+    --sidebar-w: 15rem;
+    --row-h: 2.75rem;
+    --row-h-compact: 2rem;
     --row-h-relaxed: 4rem;
-    --cover-sm: 2.5rem;
+    --control-h: 2rem;
+    --cover-sm: 3rem;
     --cover-lg: 6rem;
 
     /* ─── player tokens ──────────────────────────────────────────────────── */
 
     --chord-pps: clamp(1.75rem, 6cqi, 4rem);
-    --matrix-wallpaper: 0.38;
+    --matrix-wallpaper: 0.5;
+    --matrix-stroke: 0.4;
     --wf-played: var(--accent);
-    --wf-unplayed: color-mix(in oklab, var(--ink) 15%, transparent);
+    --wf-unplayed: color-mix(in oklab, var(--ink) 12%, transparent);
+    --play-size: 4rem;
+    /* How wide the expanded player's cover/title/seek stack is allowed to get. */
+    --player-stack: 32rem;
+    --lyric-rest: color-mix(in oklab, var(--ink) 6%, transparent);
+    --lyric-active: color-mix(in oklab, var(--ink) 14%, transparent);
   }
 
   [data-theme='dark'] {
@@ -244,9 +304,11 @@
 
   @media (prefers-reduced-motion: reduce) {
     :root {
+      --duration-instant: 1ms;
       --duration-fast: 1ms;
       --duration-base: 1ms;
       --duration-slow: 1ms;
+      --duration-slower: 1ms;
     }
   }
 }

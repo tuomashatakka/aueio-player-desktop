@@ -16,6 +16,7 @@
   [aria-busy='true'] {
     cursor: progress;
     opacity: 0.7;
+    transition: opacity var(--duration-base) var(--ease);
   }
 
   [data-loading] {
@@ -30,17 +31,36 @@
       border-radius: inherit;
       background: linear-gradient(
         90deg,
-        var(--surface-hover) 25%,
-        var(--surface-input) 37%,
-        var(--surface-hover) 63%
+        var(--surface-input) 25%,
+        var(--surface-hover) 37%,
+        var(--surface-input) 63%
       );
       background-size: 400% 100%;
       animation: shimmer 1.4s ease-in-out infinite;
     }
   }
 
+  /*
+   * Selection is an accent wash plus a bar on the leading edge (an inset
+   * box-shadow, so it neither reflows the row nor needs a pseudo-element).
+   * The bar animates out from nothing on deselect because the resting rule
+   * declares the same shadow at zero spread.
+   */
+  [data-selected] {
+    box-shadow: inset 0.125rem 0 0 -0.125rem var(--accent);
+    transition:
+      background var(--duration-fast) var(--ease),
+      color var(--duration-fast) var(--ease),
+      box-shadow var(--duration-base) var(--ease-emphasis);
+  }
+
   [data-selected='true'] {
     background: var(--accent-muted);
+    box-shadow: inset 0.125rem 0 0 0 var(--accent);
+
+    td {
+      color: var(--ink);
+    }
   }
 
   :focus-visible {
